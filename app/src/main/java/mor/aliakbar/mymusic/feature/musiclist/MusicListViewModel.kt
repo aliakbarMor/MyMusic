@@ -40,5 +40,14 @@ class MusicListViewModel @Inject constructor(private val musicRepository: MusicR
         musicRepository.updateListSateContainer(state)
     }
 
+    suspend fun getCurrentMusicList(): List<Music> {
+        return musicRepository.getCurrentList()
+    }
+
+    fun saveLastMusicPlayed(music: Music, position: Int) {
+        musicRepository.saveLastMusicPlayed(music, position)
+        lastMusicPlayed.value = music
+    }
+
 
 }

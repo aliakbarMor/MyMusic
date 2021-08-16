@@ -1,7 +1,6 @@
 package mor.aliakbar.mymusic.feature.playmusic
 
 import android.media.MediaPlayer
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -10,8 +9,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mor.aliakbar.mymusic.base.BaseViewModel
-import mor.aliakbar.mymusic.data.dataclass.ListStateContainer
-import mor.aliakbar.mymusic.data.dataclass.ListStateType
 import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.repository.MusicRepository
 import mor.aliakbar.mymusic.services.musicservice.MusicService
@@ -39,17 +36,7 @@ class PlayMusicViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val list = async {
-                when (ListStateContainer.state) {
-                    ListStateType.DEFAULT -> musicRepository.getDeviceMusic()
-                    ListStateType.MOST_PLAYED -> musicRepository.getMostPlayedMusic()
-                    ListStateType.PLAY_LIST ->
-                        musicRepository.getMusicsFromPlaylist(state.get<String>("playlistName")!!)
-//                TODO
-                    ListStateType.FILTERED -> musicRepository.getDeviceMusic()
-                    ListStateType.CUSTOM -> musicRepository.getDeviceMusic()
-                }
-            }
+            val list = async { musicRepository.getCurrentList() }
             musicsList.value = list.await()
             music.value = list.await()[position]
 
@@ -135,34 +122,11 @@ class PlayMusicViewModel @Inject constructor(
     }
 
     fun onPauseAndPlayClicked() {
-//        val notification = MusicNotification.getInstance(context)
-
         if (mediaPlayer.isPlaying) {
-//            notification!!.remoteViews.setImageViewResource(
-//                R.id.ic_play_and_pause_song,
-//                R.drawable.ic_play
-//            )
             isPlay.postValue(false)
-//            mediaPlayer.stop()
-
-//            intent.action = MusicService.ACTION_STOP
-//            context.startService(intent)
-
         } else {
-//            notification!!.remoteViews.setImageViewResource(
-//                R.id.ic_play_and_pause_song,
-//                R.drawable.ic_pause
-//            )
-///            playMusic()
             isPlay.postValue(true)
-//            val intent = Intent(context, MusicService::class.java)
-//            intent.action = MusicService.ACTION_PLAY
-//            intent.putExtra("position", position)
-//            intent.putExtra("currentPositionTime", currentPositionTime.value!!)
-//            context.startService(intent)
-
         }
-//        notification.notificationManager.notify(10101, notification.notification.build())
     }
 
     fun onFavoriteClicked() {

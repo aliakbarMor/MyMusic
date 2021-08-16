@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.base.BaseFragment
@@ -85,33 +86,37 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
         viewModel.currentPositionTime.observe(viewLifecycleOwner, {
             binding.currentDuration.text = Utils.milliToMinutes(it.toString())
             if (it >= 0) {
-                binding.seekBar.progress =
-                    it.toInt() * 100 / viewModel.music.value!!.duration!!.toInt()
+                if (viewModel.music.value != null)
+                    binding.seekBar.progress =
+                        it.toInt() * 100 / viewModel.music.value?.duration!!.toInt()
             }
         })
 
-        viewModel.isRepeat.observe(viewLifecycleOwner, {
-            if (it)
-                binding.btnRepeat.setImageResource(R.drawable.ic_repeat)
-            else
-                binding.btnRepeat.setImageResource(R.drawable.ic_repeat_off)
-        })
+        viewModel.isRepeat.observe(viewLifecycleOwner,
+            {
+                if (it)
+                    binding.btnRepeat.setImageResource(R.drawable.ic_repeat)
+                else
+                    binding.btnRepeat.setImageResource(R.drawable.ic_repeat_off)
+            })
 
-        viewModel.isPlay.observe(viewLifecycleOwner, {
-            if (it) {
-                binding.btnPlay.setImageResource(R.mipmap.ic_pause)
-            } else {
-                binding.btnPlay.setImageResource(R.mipmap.ic_play)
-            }
-        })
+        viewModel.isPlay.observe(viewLifecycleOwner,
+            {
+                if (it) {
+                    binding.btnPlay.setImageResource(R.mipmap.ic_pause)
+                } else {
+                    binding.btnPlay.setImageResource(R.mipmap.ic_play)
+                }
+            })
 
-        viewModel.isFavorite.observe(viewLifecycleOwner, {
-            if (it) {
-                binding.btnFavourite.setImageResource(R.drawable.ic_favorite)
-            } else {
-                binding.btnFavourite.setImageResource(R.drawable.ic_not_favorite)
-            }
-        })
+        viewModel.isFavorite.observe(viewLifecycleOwner,
+            {
+                if (it) {
+                    binding.btnFavourite.setImageResource(R.drawable.ic_favorite)
+                } else {
+                    binding.btnFavourite.setImageResource(R.drawable.ic_not_favorite)
+                }
+            })
     }
 
 
@@ -156,5 +161,10 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
 //                requireContext(), viewModel.music.value!!.artist, viewModel.music.value!!.title
 //            )
         }
+
+        binding.backButton.setOnClickListener {
+            findNavController().popBackStack()
+        }
+
     }
 }

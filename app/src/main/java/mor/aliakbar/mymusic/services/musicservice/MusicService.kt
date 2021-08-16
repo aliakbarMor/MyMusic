@@ -5,12 +5,10 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
-import mor.aliakbar.mymusic.data.dataclass.ListStateContainer
-import mor.aliakbar.mymusic.data.dataclass.ListStateType
+import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.repository.MusicRepository
 import mor.aliakbar.mymusic.notification.MusicNotification
@@ -60,10 +58,12 @@ class MusicService : Service() {
             ACTION_STOP -> {
                 stopForeground(false)
                 mediaPlayer.stop()
+                updateIconPlayAndPauseNotification()
             }
             ACTION_RESUME -> {
                 startForeground(5, musicNotification.createNotification(music, position))
                 playMusic(intent.getIntExtra("currentPositionTime", -1))
+                updateIconPlayAndPauseNotification()
             }
             ACTION_CHANGE_STATE -> {
                 state = intent.getStringExtra("change state")!!
@@ -73,9 +73,23 @@ class MusicService : Service() {
         return START_STICKY
     }
 
+    private fun updateIconPlayAndPauseNotification() {
+        if (mediaPlayer.isPlaying) {
+            musicNotification.remoteViews.setImageViewResource(
+                R.id.ic_play_and_pause_song,
+                R.drawable.ic_pause
+            )
+        } else {
+            musicNotification.remoteViews.setImageViewResource(
+                R.id.ic_play_and_pause_song,
+                R.drawable.ic_play
+            )
+        }
+        musicNotification.notificationManager.notify(5, musicNotification.notification.build())
+    }
+
     private fun setOnCompletionListener() {
         mediaPlayer.setOnCompletionListener {
-            Log.d("AAAAAAAAA", (mediaPlayer.currentPosition - music.duration!!.toInt()).toString())
             if (mediaPlayer.currentPosition - music.duration!!.toInt() < 1000 &&
                 mediaPlayer.currentPosition - music.duration!!.toInt() > -1000
             ) {
@@ -100,7 +114,6 @@ class MusicService : Service() {
                         }
                     }
                 }
-//                setIsFavorite()
                 sendBroadcast(
                     ACTION_MUSIC_COMPLETED, Bundle().apply { putInt("currentPosition", position) }
                 )
@@ -116,44 +129,40 @@ class MusicService : Service() {
 
     private fun getMusicsList(intent: Intent) {
         runBlocking {
-            musicsList = when (ListStateContainer.state) {
-                ListStateType.DEFAULT -> musicRepository.getDeviceMusic()
-                ListStateType.MOST_PLAYED -> musicRepository.getMostPlayedMusic()
-                ListStateType.PLAY_LIST ->
-                    musicRepository.getMusicsFromPlaylist(intent.getStringExtra("playlistName")!!)
-//                TODO
-                ListStateType.FILTERED -> musicRepository.getDeviceMusic()
-                ListStateType.CUSTOM -> musicRepository.getDeviceMusic()
-            }
+            musicsList = musicRepository.getCurrentList()
         }
-
     }
 
     private fun playMusic(currentPositionTime: Int) {
-        mediaPlayer.reset()
-        mediaPlayer.setDataSource(music.path)
-        mediaPlayer.prepare()
-        mediaPlayer.start()
-        if (currentPositionTime != -1)
-            mediaPlayer.seekTo(currentPositionTime)
+        try {
+            mediaPlayer.reset()
+            mediaPlayer.setDataSource(music.path)
+            mediaPlayer.prepare()
+            mediaPlayer.start()
+            if (currentPositionTime != -1)
+                mediaPlayer.seekTo(currentPositionTime)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
 
         updateNumberOfPlayed(music)
-        sendBroadcastsStartAndProgress(position, music)
+        sendBroadcastsStartAndProgress(position)
     }
 
-    private fun sendBroadcastsStartAndProgress(position: Int, music: Music) {
+    private fun sendBroadcastsStartAndProgress(position: Int) {
         val bundle = Bundle()
         bundle.putInt("currentPosition", position)
         sendBroadcast(ACTION_MUSIC_STARTED, bundle)
 
-        val totalTimeSecond = music.duration!!.toInt() / 1000
         CoroutineScope(Dispatchers.IO).launch {
-            for (int in 0..totalTimeSecond) {
+            while (mediaPlayer.duration == music.duration?.toInt()) {
                 delay(1000)
-                val currentPosition = mediaPlayer.currentPosition
-                val bundle1 = Bundle()
-                bundle1.putInt("currentPositionTime", currentPosition)
-                sendBroadcast(ACTION_MUSIC_IN_PROGRESS, bundle1)
+                if (mediaPlayer.isPlaying) {
+                    val currentPosition = mediaPlayer.currentPosition
+                    val bundle1 = Bundle()
+                    bundle1.putInt("currentPositionTime", currentPosition)
+                    sendBroadcast(ACTION_MUSIC_IN_PROGRESS, bundle1)
+                }
             }
         }
     }

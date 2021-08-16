@@ -3,7 +3,9 @@ package mor.aliakbar.mymusic.data.repository
 import mor.aliakbar.mymusic.data.dataclass.ListStateType
 import mor.aliakbar.mymusic.data.dataclass.Music
 
-interface MusicRepository{
+interface MusicRepository {
+
+    suspend fun getCurrentList(playListName: String? = null): List<Music>
 
     fun getDeviceMusic(): List<Music>
 

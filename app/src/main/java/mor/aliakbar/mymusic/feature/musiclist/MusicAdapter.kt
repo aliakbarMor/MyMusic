@@ -47,12 +47,6 @@ class MusicAdapter @Inject constructor(private val loadingImage: LoadingImageSer
         } else if (holder is HorizontalMusicListViewHolder) {
             holder.bind(music, position)
         }
-
-        holder.itemView.setOnClickListener {
-            if (selectedMode)
-                toggleSelection(music, position)
-            musicListener?.onMusicClicked(position, false)
-        }
     }
 
     override fun getItemCount(): Int = musics.size
