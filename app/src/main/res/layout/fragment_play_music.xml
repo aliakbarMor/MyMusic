@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/image_music"
+        android:layout_width="match_parent"
+        android:layout_height="390dp" />
+    <!--        app:loadImage="@{viewModelMusic.music.path}"-->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/backButton"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@drawable/ic_back" />
+
+        <ImageView
+            android:id="@+id/btnFavourite"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginEnd="8dp"
+            android:layout_toStartOf="@+id/btn_lyrics"
+            android:src="@drawable/ic_not_favorite" />
+        <!--            android:onClick="@{()-> viewModelMusic.onFavoriteClicked()}"-->
+
+        <ImageView
+            android:id="@+id/btn_lyrics"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_lyric" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/layoutNextUp"
+        android:layout_below="@+id/image_music"
+        android:orientation="vertical">
+        <!--        TODO Background -->
+        <!--        android:background="@color/background"-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_margin="4dp"
+            android:layout_marginTop="16dp"
+            android:layout_weight="0.7"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/currentDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:hint="@string/_00_00" />
+
+
+            <SeekBar
+                android:id="@+id/seekBar"
+                android:layout_width="wrap_content"
+                android:layout_height="100dp"
+                android:layout_weight="10" />
+
+            <TextView
+                android:id="@+id/total_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:hint="@string/_00_00"
+                android:text="@{viewModelMusic.milliToTime(viewModelMusic.music.duration)}" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_title"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="0.6"
+            android:gravity="center"
+            android:hint="@string/title"
+            android:text="@{viewModelMusic.music.title}"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/text_artist"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="0.6"
+            android:gravity="center"
+            android:hint="@string/artist"
+            android:text="@{viewModelMusic.music.artist}"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:layout_weight="0.6"
+                android:background="?backgroundIconColor"
+                android:src="@drawable/ic_shuffle" />
+            <!--                android:onClick="@{()-> viewModelMusic.onShuffleClicked()}"-->
+
+            <ImageButton
+                android:id="@+id/btn_previous"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:background="?backgroundIconColor"
+                android:src="@drawable/ic_skip_previous" />
+            <!--                android:onClick="@{()-> viewModelMusic.skipPrevious()}"-->
+
+            <ImageView
+                android:id="@+id/btn_play"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:src="@mipmap/ic_pause" />
+            <!--                android:onClick="@{()->viewModelMusic.onPauseAndPlayClicked()}"-->
+
+            <ImageButton
+                android:id="@+id/btn_next"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:background="?backgroundIconColor"
+                android:src="@drawable/ic_skip_next" />
+            <!--                android:onClick="@{()-> viewModelMusic.skipNext()}"-->
+
+            <ImageButton
+                android:id="@+id/btn_repeat"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:layout_weight="0.6"
+                android:background="?backgroundIconColor"
+                android:src="@drawable/ic_repeat_off" />
+            <!--                android:onClick="@{()-> viewModelMusic.onRepeatClicked()}"-->
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutNextUp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#FAFAFA"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/text_nextUp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="up next" />
+
+        <TextView
+            android:id="@+id/textWitchSong"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:text="6/200" />
+
+    </LinearLayout>
+
+</RelativeLayout>
