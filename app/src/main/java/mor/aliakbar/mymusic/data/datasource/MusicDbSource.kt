@@ -29,10 +29,10 @@ interface MusicDbSource : MusicDataSource {
         playListName: String
     ): Music
 
-    @Query("SELECT * FROM musics WHERE title = :title and artist = :artist and playListName = :playlistName")
-    override suspend fun getMusicInMostPlayed(
+    @Query("SELECT numberOfPlayedSong FROM musics WHERE title = :title and artist = :artist and playListName = :playlistName")
+    override suspend fun getNumberOfPlayed(
         title: String, artist: String, playlistName: String
-    ): Music
+    ): Long?
 
     @Query("SELECT * FROM musics WHERE playListName = :playlistName")
     override suspend fun getMusicsFromPlaylist(playlistName: String): List<Music>

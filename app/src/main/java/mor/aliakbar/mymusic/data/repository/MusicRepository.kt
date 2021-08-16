@@ -19,7 +19,7 @@ interface MusicRepository{
 
     suspend fun getMostPlayedMusic(): List<Music>
 
-    suspend fun getMusicInMostPlayed(title: String, artist: String): Music?
+    suspend fun getNumberOfPlayed(title: String, artist: String): Long?
 
     suspend fun updateNumberOfPlayed(title: String, artist: String, numberOfPlayedSong: Long): Int
 

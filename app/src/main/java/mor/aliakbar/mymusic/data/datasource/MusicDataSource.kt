@@ -20,9 +20,9 @@ interface MusicDataSource {
 
     suspend fun getMusicsByNumberOfPlayed(): List<Music>
 
-    suspend fun getMusicInMostPlayed(
+    suspend fun getNumberOfPlayed(
         title: String, artist: String, playlistName: String = "most played"
-    ): Music?
+    ): Long?
 
     suspend fun updateNumberOfPlayed(
         title: String,

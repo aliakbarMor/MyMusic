@@ -1,5 +1,6 @@
 package mor.aliakbar.mymusic.feature.playmusic
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import mor.aliakbar.mymusic.base.BaseFragment
 import mor.aliakbar.mymusic.databinding.FragmentPlayMusicBinding
 import mor.aliakbar.mymusic.services.loadingimage.LoadingImageServices
+import mor.aliakbar.mymusic.services.musicservice.MusicService
 import mor.aliakbar.mymusic.utility.Utils
 import javax.inject.Inject
 
@@ -35,6 +37,17 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
                 glideLoadingImage.loadBigImage(imageMusic, it.path)
                 textWitchSong.text = "${viewModel.position}/${viewModel.musicsList.value!!.size}"
             }
+            startMusicService()
         }
+    }
+
+    private fun startMusicService() {
+//        if (!(mediaPlayer.isPlaying && music.value!!.artist == lastMusicPlayed.artist && music.value!!.title == lastMusicPlayed.title)) {
+        var intent = Intent(requireActivity(), MusicService::class.java)
+
+        intent.putExtra("position", viewModel.position)
+        intent.action = MusicService.ACTION_PLAY
+        requireActivity().startService(intent)
+//        }
     }
 }

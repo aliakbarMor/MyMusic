@@ -75,11 +75,11 @@ class MusicDeviceSource @Inject constructor(@ApplicationContext private val cont
         TODO("Not yet implemented")
     }
 
-    override suspend fun getMusicInMostPlayed(
+    override suspend fun getNumberOfPlayed(
         title: String,
         artist: String,
         playlistName: String
-    ): Music? {
+    ): Long? {
         TODO("Not yet implemented")
     }
 

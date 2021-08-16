@@ -42,8 +42,8 @@ class MusicRepositoryImpl @Inject constructor(
         return withContext(Dispatchers.IO) { musicDbSource.getMusicsByNumberOfPlayed() }
     }
 
-    override suspend fun getMusicInMostPlayed(title: String, artist: String): Music? {
-        return musicDbSource.getMusicInMostPlayed(title, artist)
+    override suspend fun getNumberOfPlayed(title: String, artist: String): Long? {
+        return musicDbSource.getNumberOfPlayed(title, artist)
     }
 
     override suspend fun updateNumberOfPlayed(
