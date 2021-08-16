@@ -22,12 +22,12 @@ interface MusicDbSource : MusicDataSource {
     @Query("DELETE FROM musics WHERE title = :title and artist = :artist and playListName = :playListName")
     override suspend fun deleteMusic(title: String, artist: String, playListName: String)
 
-    @Query("SELECT * FROM musics WHERE title = :title and artist = :artist and playListName= :playListName")
+    @Query("SELECT COUNT(*) FROM musics WHERE title = :title and artist = :artist and playListName= :playListName")
     override suspend fun isMusicInFavorite(
         title: String,
         artist: String,
         playListName: String
-    ): Music
+    ): Int
 
     @Query("SELECT numberOfPlayedSong FROM musics WHERE title = :title and artist = :artist and playListName = :playlistName")
     override suspend fun getNumberOfPlayed(

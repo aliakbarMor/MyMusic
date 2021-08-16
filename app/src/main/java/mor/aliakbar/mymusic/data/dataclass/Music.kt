@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 
 
 @Entity(tableName = "Musics")
-class Music(
+data class Music(
     var musicId: String?,
     var artist: String?,
     var title: String?,

@@ -13,7 +13,7 @@ interface MusicRepository{
 
     suspend fun deleteMusic(title: String, artist: String, playListName: String)
 
-    suspend fun isMusicInFavorite(title: String, artist: String): Music?
+    suspend fun isMusicInFavorite(title: String, artist: String): Int
 
     suspend fun getMusicsFromPlaylist(playListName: String): List<Music>
 

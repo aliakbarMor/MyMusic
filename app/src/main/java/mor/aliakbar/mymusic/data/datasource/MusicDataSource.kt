@@ -14,7 +14,7 @@ interface MusicDataSource {
 
     suspend fun isMusicInFavorite(
         title: String, artist: String, playListName: String = "Favorite"
-    ): Music?
+    ): Int
 
     suspend fun getMusicsFromPlaylist(playlistName: String): List<Music>
 

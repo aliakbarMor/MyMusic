@@ -27,6 +27,7 @@ class MusicService : Service() {
 
         const val ACTION_STOP = "action stop"
         const val ACTION_PLAY = "action play"
+        const val ACTION_RESUME = "action resume"
         const val ACTION_CHANGE_STATE = "action change state"
     }
 
@@ -47,17 +48,22 @@ class MusicService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         when (intent?.action) {
-            ACTION_STOP -> {
-                stopForeground(false)
-            }
             ACTION_PLAY -> {
                 getMusicsList(intent)
                 getCurrentMusic(intent)
 
                 startForeground(5, musicNotification.createNotification(music, position))
+                playMusic(-1)
 
-                playMusic(intent.getIntExtra("currentPositionTime", -1))
                 setOnCompletionListener()
+            }
+            ACTION_STOP -> {
+                stopForeground(false)
+                mediaPlayer.stop()
+            }
+            ACTION_RESUME -> {
+                startForeground(5, musicNotification.createNotification(music, position))
+                playMusic(intent.getIntExtra("currentPositionTime", -1))
             }
             ACTION_CHANGE_STATE -> {
                 state = intent.getStringExtra("change state")!!
@@ -70,31 +76,36 @@ class MusicService : Service() {
     private fun setOnCompletionListener() {
         mediaPlayer.setOnCompletionListener {
             Log.d("AAAAAAAAA", (mediaPlayer.currentPosition - music.duration!!.toInt()).toString())
-            when (state) {
-                StateMusic.REPEAT.name -> playMusic(-1)
-                StateMusic.SHUFFLE.name -> {
-                    val rand = Random()
-                    position = rand.nextInt(musicsList.size - 1)
-                    music = musicsList[position]
-                    playMusic(-1)
-                }
-                else -> {
-                    if (position < musicsList.size - 1) {
-                        position++
-                        music = musicsList[position]
-                        playMusic(-1)
-                    } else {
-                        position = 0
+            if (mediaPlayer.currentPosition - music.duration!!.toInt() < 1000 &&
+                mediaPlayer.currentPosition - music.duration!!.toInt() > -1000
+            ) {
+
+                when (state) {
+                    StateMusic.REPEAT.name -> playMusic(-1)
+                    StateMusic.SHUFFLE.name -> {
+                        val rand = Random()
+                        position = rand.nextInt(musicsList.size - 1)
                         music = musicsList[position]
                         playMusic(-1)
                     }
+                    else -> {
+                        if (position < musicsList.size - 1) {
+                            position++
+                            music = musicsList[position]
+                            playMusic(-1)
+                        } else {
+                            position = 0
+                            music = musicsList[position]
+                            playMusic(-1)
+                        }
+                    }
                 }
-            }
 //                setIsFavorite()
-            sendBroadcast(
-                ACTION_MUSIC_COMPLETED, Bundle().apply { putInt("currentPosition", position) }
-            )
+                sendBroadcast(
+                    ACTION_MUSIC_COMPLETED, Bundle().apply { putInt("currentPosition", position) }
+                )
 
+            }
         }
     }
 

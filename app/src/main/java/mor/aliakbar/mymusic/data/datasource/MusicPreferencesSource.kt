@@ -27,7 +27,7 @@ class MusicPreferencesSource @Inject constructor(private var sharedPreferences: 
         title: String,
         artist: String,
         playListName: String
-    ): Music? {
+    ): Int {
         TODO("Not yet implemented")
     }
 

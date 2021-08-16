@@ -63,7 +63,7 @@ class MusicDeviceSource @Inject constructor(@ApplicationContext private val cont
         title: String,
         artist: String,
         playListName: String
-    ): Music? {
+    ): Int {
         TODO("Not yet implemented")
     }
 

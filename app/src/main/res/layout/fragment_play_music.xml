@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -99,28 +100,36 @@
             android:hint="@string/artist"
             android:textSize="16sp" />
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal">
+            android:layout_weight="1">
 
             <ImageButton
+                android:id="@+id/btnShuffle"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="center"
                 android:layout_weight="0.6"
                 android:background="?backgroundIconColor"
-                android:src="@drawable/ic_shuffle" />
+                android:src="@drawable/ic_shuffle"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btn_skip_previous"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
-                android:id="@+id/btn_previous"
+                android:id="@+id/btn_skip_previous"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:background="?backgroundIconColor"
-                android:src="@drawable/ic_skip_previous" />
+                android:src="@drawable/ic_skip_previous"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btn_play"
+                app:layout_constraintStart_toEndOf="@id/btnShuffle"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
                 android:id="@+id/btn_play"
@@ -128,16 +137,24 @@
                 android:layout_height="80dp"
                 android:layout_gravity="center"
                 android:layout_weight="1"
-                android:src="@mipmap/ic_pause" />
+                android:src="@mipmap/ic_pause"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btn_skip_next"
+                app:layout_constraintStart_toEndOf="@id/btn_skip_previous"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
-                android:id="@+id/btn_next"
+                android:id="@+id/btn_skip_next"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:background="?backgroundIconColor"
-                android:src="@drawable/ic_skip_next" />
+                android:src="@drawable/ic_skip_next"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btn_repeat"
+                app:layout_constraintStart_toEndOf="@id/btn_play"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
                 android:id="@+id/btn_repeat"
@@ -146,8 +163,12 @@
                 android:layout_gravity="center"
                 android:layout_weight="0.6"
                 android:background="?backgroundIconColor"
-                android:src="@drawable/ic_repeat_off" />
-        </LinearLayout>
+                android:src="@drawable/ic_repeat_off"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/btn_skip_next"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </LinearLayout>
 

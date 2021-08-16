@@ -30,7 +30,7 @@ class MusicRepositoryImpl @Inject constructor(
         musicDbSource.deleteMusic(title, artist, playListName)
     }
 
-    override suspend fun isMusicInFavorite(title: String, artist: String): Music? {
+    override suspend fun isMusicInFavorite(title: String, artist: String): Int {
         return musicDbSource.isMusicInFavorite(title, artist)
     }
 
