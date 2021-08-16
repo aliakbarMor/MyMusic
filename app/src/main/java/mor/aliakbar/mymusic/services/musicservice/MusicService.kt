@@ -5,6 +5,7 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -13,6 +14,7 @@ import mor.aliakbar.mymusic.data.dataclass.ListStateType
 import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.repository.MusicRepository
 import mor.aliakbar.mymusic.notification.MusicNotification
+import java.util.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -25,6 +27,7 @@ class MusicService : Service() {
 
         const val ACTION_STOP = "action stop"
         const val ACTION_PLAY = "action play"
+        const val ACTION_CHANGE_STATE = "action change state"
     }
 
     @Inject lateinit var musicRepository: MusicRepository
@@ -32,6 +35,10 @@ class MusicService : Service() {
     @Inject lateinit var musicNotification: MusicNotification
 
     private var musicsList = emptyList<Music>()
+    private lateinit var music: Music
+    private var position: Int = -1
+
+    var state: String = StateMusic.NORMAL.name
 
     override fun onBind(intent: Intent): IBinder {
         TODO("Return the communication channel to the service.")
@@ -44,42 +51,86 @@ class MusicService : Service() {
                 stopForeground(false)
             }
             ACTION_PLAY -> {
-                runBlocking {
-                    musicsList = when (ListStateContainer.state) {
-                        ListStateType.DEFAULT -> musicRepository.getDeviceMusic()
-                        ListStateType.MOST_PLAYED -> musicRepository.getMostPlayedMusic()
-                        ListStateType.PLAY_LIST ->
-                            musicRepository.getMusicsFromPlaylist(intent.getStringExtra("playlistName")!!)
-//                TODO
-                        ListStateType.FILTERED -> musicRepository.getDeviceMusic()
-                        ListStateType.CUSTOM -> musicRepository.getDeviceMusic()
-                    }
-                }
+                getMusicsList(intent)
+                getCurrentMusic(intent)
 
-                val position = intent.getIntExtra("position", -1)
-                val music = musicsList[position]
-                startForeground(
-                    5, musicNotification.createNotification(music, position)
-                )
-                playMusic(music, intent.getIntExtra("currentPositionTime", -1))
-                sendBroadcasts(position, music)
-                updateNumberOfPlayed(music)
+                startForeground(5, musicNotification.createNotification(music, position))
+
+                playMusic(intent.getIntExtra("currentPositionTime", -1))
+                setOnCompletionListener()
+            }
+            ACTION_CHANGE_STATE -> {
+                state = intent.getStringExtra("change state")!!
             }
         }
 
         return START_STICKY
     }
 
-    private fun playMusic(music: Music, currentPositionTime: Int) {
+    private fun setOnCompletionListener() {
+        mediaPlayer.setOnCompletionListener {
+            Log.d("AAAAAAAAA", (mediaPlayer.currentPosition - music.duration!!.toInt()).toString())
+            when (state) {
+                StateMusic.REPEAT.name -> playMusic(-1)
+                StateMusic.SHUFFLE.name -> {
+                    val rand = Random()
+                    position = rand.nextInt(musicsList.size - 1)
+                    music = musicsList[position]
+                    playMusic(-1)
+                }
+                else -> {
+                    if (position < musicsList.size - 1) {
+                        position++
+                        music = musicsList[position]
+                        playMusic(-1)
+                    } else {
+                        position = 0
+                        music = musicsList[position]
+                        playMusic(-1)
+                    }
+                }
+            }
+//                setIsFavorite()
+            sendBroadcast(
+                ACTION_MUSIC_COMPLETED, Bundle().apply { putInt("currentPosition", position) }
+            )
+
+        }
+    }
+
+    private fun getCurrentMusic(intent: Intent) {
+        position = intent.getIntExtra("position", -1)
+        music = musicsList[position]
+    }
+
+    private fun getMusicsList(intent: Intent) {
+        runBlocking {
+            musicsList = when (ListStateContainer.state) {
+                ListStateType.DEFAULT -> musicRepository.getDeviceMusic()
+                ListStateType.MOST_PLAYED -> musicRepository.getMostPlayedMusic()
+                ListStateType.PLAY_LIST ->
+                    musicRepository.getMusicsFromPlaylist(intent.getStringExtra("playlistName")!!)
+//                TODO
+                ListStateType.FILTERED -> musicRepository.getDeviceMusic()
+                ListStateType.CUSTOM -> musicRepository.getDeviceMusic()
+            }
+        }
+
+    }
+
+    private fun playMusic(currentPositionTime: Int) {
         mediaPlayer.reset()
         mediaPlayer.setDataSource(music.path)
         mediaPlayer.prepare()
         mediaPlayer.start()
         if (currentPositionTime != -1)
             mediaPlayer.seekTo(currentPositionTime)
+
+        updateNumberOfPlayed(music)
+        sendBroadcastsStartAndProgress(position, music)
     }
 
-    private fun sendBroadcasts(position: Int, music: Music) {
+    private fun sendBroadcastsStartAndProgress(position: Int, music: Music) {
         val bundle = Bundle()
         bundle.putInt("currentPosition", position)
         sendBroadcast(ACTION_MUSIC_STARTED, bundle)
@@ -94,6 +145,12 @@ class MusicService : Service() {
                 sendBroadcast(ACTION_MUSIC_IN_PROGRESS, bundle1)
             }
         }
+    }
+
+    private fun sendBroadcast(action: String, bundle: Bundle) {
+        val intent = Intent(action)
+        intent.putExtras(bundle)
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 
     private fun updateNumberOfPlayed(music: Music) {
@@ -113,11 +170,12 @@ class MusicService : Service() {
         }
     }
 
-    private fun sendBroadcast(action: String, bundle: Bundle) {
-        val intent = Intent(action)
-        intent.putExtras(bundle)
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+
+    enum class StateMusic {
+        NORMAL,
+        REPEAT,
+        SHUFFLE
     }
-
-
 }
+
+

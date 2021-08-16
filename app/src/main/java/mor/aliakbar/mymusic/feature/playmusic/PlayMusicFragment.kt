@@ -43,8 +43,7 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
 
     private fun startMusicService() {
 //        if (!(mediaPlayer.isPlaying && music.value!!.artist == lastMusicPlayed.artist && music.value!!.title == lastMusicPlayed.title)) {
-        var intent = Intent(requireActivity(), MusicService::class.java)
-
+        val intent = Intent(requireActivity(), MusicService::class.java)
         intent.putExtra("position", viewModel.position)
         intent.action = MusicService.ACTION_PLAY
         requireActivity().startService(intent)

@@ -8,7 +8,6 @@
         android:id="@+id/image_music"
         android:layout_width="match_parent"
         android:layout_height="390dp" />
-    <!--        app:loadImage="@{viewModelMusic.music.path}"-->
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -28,7 +27,6 @@
             android:layout_marginEnd="8dp"
             android:layout_toStartOf="@+id/btn_lyrics"
             android:src="@drawable/ic_not_favorite" />
-        <!--            android:onClick="@{()-> viewModelMusic.onFavoriteClicked()}"-->
 
         <ImageView
             android:id="@+id/btn_lyrics"
@@ -77,8 +75,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:hint="@string/_00_00"
-                android:text="@{viewModelMusic.milliToTime(viewModelMusic.music.duration)}" />
+                android:hint="@string/_00_00" />
 
         </LinearLayout>
 
@@ -90,7 +87,6 @@
             android:layout_weight="0.6"
             android:gravity="center"
             android:hint="@string/title"
-            android:text="@{viewModelMusic.music.title}"
             android:textSize="20sp" />
 
         <TextView
@@ -101,7 +97,6 @@
             android:layout_weight="0.6"
             android:gravity="center"
             android:hint="@string/artist"
-            android:text="@{viewModelMusic.music.artist}"
             android:textSize="16sp" />
 
         <LinearLayout
@@ -117,7 +112,6 @@
                 android:layout_weight="0.6"
                 android:background="?backgroundIconColor"
                 android:src="@drawable/ic_shuffle" />
-            <!--                android:onClick="@{()-> viewModelMusic.onShuffleClicked()}"-->
 
             <ImageButton
                 android:id="@+id/btn_previous"
@@ -127,7 +121,6 @@
                 android:layout_weight="1"
                 android:background="?backgroundIconColor"
                 android:src="@drawable/ic_skip_previous" />
-            <!--                android:onClick="@{()-> viewModelMusic.skipPrevious()}"-->
 
             <ImageView
                 android:id="@+id/btn_play"
@@ -136,7 +129,6 @@
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:src="@mipmap/ic_pause" />
-            <!--                android:onClick="@{()->viewModelMusic.onPauseAndPlayClicked()}"-->
 
             <ImageButton
                 android:id="@+id/btn_next"
@@ -146,7 +138,6 @@
                 android:layout_weight="1"
                 android:background="?backgroundIconColor"
                 android:src="@drawable/ic_skip_next" />
-            <!--                android:onClick="@{()-> viewModelMusic.skipNext()}"-->
 
             <ImageButton
                 android:id="@+id/btn_repeat"
@@ -156,7 +147,6 @@
                 android:layout_weight="0.6"
                 android:background="?backgroundIconColor"
                 android:src="@drawable/ic_repeat_off" />
-            <!--                android:onClick="@{()-> viewModelMusic.onRepeatClicked()}"-->
         </LinearLayout>
 
     </LinearLayout>
