@@ -1,11 +1,14 @@
 package mor.aliakbar.mymusic.base
 
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
+import mor.aliakbar.mymusic.R
 
 abstract class BaseFragment<VB : ViewBinding> : Fragment() {
 
@@ -28,6 +31,19 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+    }
+
+    fun showDialog(dialogBinding: ViewBinding, onSaveClick: () -> Unit) {
+        AlertDialog
+            .Builder(context, R.style.DialogTheme)
+            .setView(dialogBinding.root)
+            .setNegativeButton("Cancel") { dialogInterface: DialogInterface, _ ->
+                dialogInterface.cancel()
+            }
+            .setPositiveButton("Save") { _, _ ->
+                onSaveClick.invoke()
+            }
+            .show()
     }
 
 }

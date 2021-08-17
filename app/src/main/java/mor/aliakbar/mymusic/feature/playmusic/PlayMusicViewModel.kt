@@ -57,8 +57,8 @@ class PlayMusicViewModel @Inject constructor(
     private fun setCurrentPosition() {
         viewModelScope.launch {
             while (true) {
-                delay(10)
                 currentPositionTime.postValue(mediaPlayer.currentPosition)
+                delay(100)
             }
         }
     }
@@ -146,6 +146,10 @@ class PlayMusicViewModel @Inject constructor(
                 toastMassage.value = "remove from favorite"
             }
         }
+    }
+
+    fun checkIsNewSong(): Boolean {
+        return (music.value?.path != musicRepository.loadLastMusicPlayed().path)
     }
 
 

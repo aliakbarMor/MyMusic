@@ -7,7 +7,7 @@ import androidx.room.Query
 import mor.aliakbar.mymusic.data.dataclass.Music
 
 @Dao
-interface MusicDbSource : MusicDataSource {
+interface MusicDaoSource : MusicDataSource {
 
     override fun getDeviceMusic(refresh: Boolean): List<Music> {
         TODO("Not yet implemented")

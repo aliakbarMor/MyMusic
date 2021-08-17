@@ -7,16 +7,16 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 import androidx.fragment.app.viewModels
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +26,9 @@ import mor.aliakbar.mymusic.base.BaseFragment
 import mor.aliakbar.mymusic.data.dataclass.ListStateContainer
 import mor.aliakbar.mymusic.data.dataclass.ListStateType
 import mor.aliakbar.mymusic.data.dataclass.Music
+import mor.aliakbar.mymusic.data.dataclass.PlayList
+import mor.aliakbar.mymusic.databinding.DialogAddNewPlaylistBinding
+import mor.aliakbar.mymusic.databinding.DialogSleepTimerBinding
 import mor.aliakbar.mymusic.databinding.FragmentMusicListBinding
 import mor.aliakbar.mymusic.databinding.NavHeaderBinding
 import mor.aliakbar.mymusic.services.loadingimage.LoadingImageServices
@@ -35,7 +38,8 @@ import java.util.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListener {
+class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListener,
+    NavigationView.OnNavigationItemSelectedListener {
 
     override val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> FragmentMusicListBinding
         get() = { layoutInflater, viewGroup, b ->
@@ -66,6 +70,52 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
         TODO("Not yet implemented")
     }
 
+    override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
+        when (menuItem.itemId) {
+            R.id.sleepTimer -> {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                val dialogSleepTimerBinding =
+                    DialogSleepTimerBinding.inflate(LayoutInflater.from(requireContext()))
+                showDialog(dialogSleepTimerBinding, {
+                    val sleepTime = dialogSleepTimerBinding.textSleepTime.text
+                    val time = sleepTime.toString().toInt() * 1000 * 60
+                    Timer().schedule(object : TimerTask() {
+                        override fun run() {
+                            requireActivity().startService(
+                                Intent(requireActivity(), MusicService::class.java).apply {
+                                    action = MusicService.ACTION_STOP
+                                })
+                        }
+                    }, time.toLong())
+                })
+            }
+            R.id.about -> {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                val action = MusicListFragmentDirections.actionMusicListToAboutFragment()
+                controller.navigate(action)
+            }
+            R.id.addNewPlaylist -> {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                val dialogBinding =
+                    DialogAddNewPlaylistBinding.inflate(LayoutInflater.from(requireContext()))
+                showDialog(
+                    dialogBinding, {
+                        viewModel.insertPlaylist(
+                            PlayList(playListName = dialogBinding.tvNamePlaylist.text.toString())
+                        )
+                    })
+            }
+            else -> {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+                val action =
+                    MusicListFragmentDirections.actionMusicListToPlayListFragment(menuItem.title.toString())
+                controller.navigate(action)
+            }
+        }
+        return false
+    }
+
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -92,9 +142,21 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
             .registerReceiver(musicReceiver, musicIntentFilter)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        LocalBroadcastManager.getInstance(requireActivity()).unregisterReceiver(musicReceiver)
+    }
+
     private fun initialize() {
         controller = requireActivity().findNavController(R.id.nav_host_fragment)
         binding.navView.addHeaderView(navBinding.root)
+        binding.navView.setNavigationItemSelectedListener(this)
+
+        addPlayListsToMenuExceptFavorite(binding.navView.menu)
+
+        binding.imageMenu.setOnClickListener {
+            binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
 
         binding.bottomSheet.setOnClickListener {
             viewModel.updateListSateContainer(ListStateType.DEFAULT)
@@ -133,6 +195,20 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
             }
         }
 
+        viewModel.percentageTime.observe(viewLifecycleOwner) {
+            binding.seekBar.progress = it
+        }
+    }
+
+    private fun addPlayListsToMenuExceptFavorite(menu: Menu) {
+        viewModel.playLists.observe(viewLifecycleOwner) {
+            menu.removeItem(52)
+            it.forEach { playList ->
+                if (playList.playListName != "Favorite") {
+                    menu.add(0, 52, Menu.NONE, playList.playListName).setIcon(R.drawable.ic_music)
+                }
+            }
+        }
     }
 
     private fun checkPermission() {
@@ -160,14 +236,8 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
         controller.navigate(action)
     }
 
-    private fun setNavViewAndBottomShit(music: Music) {
-
-    }
-
-
     private var musicReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-
             val action = intent.action
             val bundle = intent.extras
             when (action) {
@@ -179,8 +249,10 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
                     }
                 }
                 MusicService.ACTION_MUSIC_IN_PROGRESS -> {
-                    binding.seekBar.progress =
-                        bundle!!.getInt("currentPositionTime") * 100 / viewModel.lastMusicPlayed.value?.duration!!.toInt()
+                    viewModel.updatePercentageCurrentPositionTime(
+                        bundle!!.getInt("currentPositionTime") * 100
+                                / viewModel.lastMusicPlayed.value?.duration!!.toInt()
+                    )
                 }
             }
         }

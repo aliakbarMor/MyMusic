@@ -39,7 +39,7 @@
             android:id="@+id/icon_my_music"
             android:layout_width="match_parent"
             android:layout_height="100dp"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="100dp"
             android:src="@drawable/app_icon" />
 
         <TextView
@@ -48,14 +48,14 @@
             android:layout_below="@+id/icon_my_music"
             android:layout_centerHorizontal="true"
             android:layout_margin="4dp"
-            android:text="My Music" />
+            android:text="@string/app_name" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/icon_my_music"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="150dp"
+            android:layout_marginTop="100dp"
             android:orientation="horizontal"
             android:padding="8dp">
 

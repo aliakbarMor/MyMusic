@@ -45,13 +45,17 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
                 glideLoadingImage.loadBigImage(imageMusic, it.path)
                 textWitchSong.text =
                     "${viewModel.position + 1}/${viewModel.musicsList.value!!.size}"
+                btnPlay.setImageResource(R.mipmap.ic_pause)
             }
+            if (viewModel.checkIsNewSong() || !MusicService.isServiceStart)
+                requireActivity().startService(
+                    Intent(requireActivity(), MusicService::class.java).apply {
+                        action = MusicService.ACTION_PLAY
+                        putExtra("position", viewModel.position)
+                    })
+            else if (!viewModel.mediaPlayer.isPlaying)
+                binding.btnPlay.setImageResource(R.mipmap.ic_play)
 
-            requireActivity().startService(
-                Intent(requireActivity(), MusicService::class.java).apply {
-                    action = MusicService.ACTION_PLAY
-                    putExtra("position", viewModel.position)
-                })
         }
 
         viewModel.toastMassage.observe(viewLifecycleOwner) {
@@ -68,6 +72,7 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
 
         viewModel.isPlay.observe(viewLifecycleOwner) {
             if (it) {
+                binding.btnPlay.setImageResource(R.mipmap.ic_pause)
                 requireActivity().startService(
                     Intent(requireActivity(), MusicService::class.java).apply {
                         action = MusicService.ACTION_RESUME
@@ -75,49 +80,37 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
                         putExtra("currentPositionTime", viewModel.currentPositionTime.value!!)
                     })
             } else {
+                binding.btnPlay.setImageResource(R.mipmap.ic_play)
                 requireActivity().startService(
                     Intent(requireActivity(), MusicService::class.java).apply {
                         action = MusicService.ACTION_STOP
-                        putExtra("position", viewModel.position)
-                        putExtra("currentPositionTime", viewModel.currentPositionTime.value!!)
                     })
             }
         }
 
-        viewModel.currentPositionTime.observe(viewLifecycleOwner, {
+        viewModel.currentPositionTime.observe(viewLifecycleOwner) {
             binding.currentDuration.text = Utils.milliToMinutes(it.toString())
             if (it >= 0) {
                 if (viewModel.music.value != null)
                     binding.seekBar.progress =
                         it.toInt() * 100 / viewModel.music.value?.duration!!.toInt()
             }
-        })
+        }
 
-        viewModel.isRepeat.observe(viewLifecycleOwner,
-            {
-                if (it)
-                    binding.btnRepeat.setImageResource(R.drawable.ic_repeat)
-                else
-                    binding.btnRepeat.setImageResource(R.drawable.ic_repeat_off)
-            })
+        viewModel.isRepeat.observe(viewLifecycleOwner) {
+            if (it)
+                binding.btnRepeat.setImageResource(R.drawable.ic_repeat)
+            else
+                binding.btnRepeat.setImageResource(R.drawable.ic_repeat_off)
+        }
 
-        viewModel.isPlay.observe(viewLifecycleOwner,
-            {
-                if (it) {
-                    binding.btnPlay.setImageResource(R.mipmap.ic_pause)
-                } else {
-                    binding.btnPlay.setImageResource(R.mipmap.ic_play)
-                }
-            })
-
-        viewModel.isFavorite.observe(viewLifecycleOwner,
-            {
-                if (it) {
-                    binding.btnFavourite.setImageResource(R.drawable.ic_favorite)
-                } else {
-                    binding.btnFavourite.setImageResource(R.drawable.ic_not_favorite)
-                }
-            })
+        viewModel.isFavorite.observe(viewLifecycleOwner) {
+            if (it) {
+                binding.btnFavourite.setImageResource(R.drawable.ic_favorite)
+            } else {
+                binding.btnFavourite.setImageResource(R.drawable.ic_not_favorite)
+            }
+        }
     }
 
 

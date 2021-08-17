@@ -4,8 +4,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "PlayLists")
-class PlayList {
+data class PlayList(
     @PrimaryKey(autoGenerate = true)
-    var id: Int = 0
+    var id: Int = 0,
     var playListName: String? = null
-}
+)

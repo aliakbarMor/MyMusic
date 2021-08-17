@@ -12,6 +12,8 @@ import mor.aliakbar.mymusic.data.datasource.MusicDeviceSource
 import mor.aliakbar.mymusic.data.datasource.MusicPreferencesSource
 import mor.aliakbar.mymusic.data.repository.MusicRepository
 import mor.aliakbar.mymusic.data.repository.MusicRepositoryImpl
+import mor.aliakbar.mymusic.data.repository.PlayListRepository
+import mor.aliakbar.mymusic.data.repository.PlayListRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -29,6 +31,11 @@ object RepositoryModule {
             appDatabase.musicDao,
             MusicPreferencesSource(context.getSharedPreferences("app", Application.MODE_PRIVATE))
         )
+    }
+
+    @Provides
+    fun providePlayLisRepository(appDatabase: AppDatabase): PlayListRepository {
+        return PlayListRepositoryImpl(appDatabase.playListDao)
     }
 
 }

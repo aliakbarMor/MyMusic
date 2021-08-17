@@ -37,13 +37,13 @@
 
     <fragment
         android:id="@+id/aboutFragment"
-        android:name="com.example.mymusic.view.AboutFragment"
+        android:name="mor.aliakbar.mymusic.feature.about.AboutFragment"
         android:label="fragment_about"
         tools:layout="@layout/fragment_about" />
 
     <fragment
         android:id="@+id/playListFragment"
-        android:name="com.example.mymusic.view.PlayListFragment"
+        android:name="mor.aliakbar.mymusic.feature.playlist.PlayListFragment"
         android:label="PlayListFragment"
         tools:layout="@layout/fragment_play_list">
         <argument

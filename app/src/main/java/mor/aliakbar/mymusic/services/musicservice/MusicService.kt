@@ -19,6 +19,8 @@ import javax.inject.Inject
 class MusicService : Service() {
 
     companion object {
+        var isServiceStart: Boolean = false
+
         const val ACTION_MUSIC_STARTED = "com.example.mymusic.action.MUSIC_STARTED"
         const val ACTION_MUSIC_COMPLETED = "com.example.mymusic.action.MUSIC_COMPLETED"
         const val ACTION_MUSIC_IN_PROGRESS = "com.example.mymusic.action.MUSIC_IN_PROGRESS"
@@ -41,6 +43,11 @@ class MusicService : Service() {
 
     override fun onBind(intent: Intent): IBinder {
         TODO("Return the communication channel to the service.")
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        isServiceStart = true
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -93,7 +100,6 @@ class MusicService : Service() {
             if (mediaPlayer.currentPosition - music.duration!!.toInt() < 1000 &&
                 mediaPlayer.currentPosition - music.duration!!.toInt() > -1000
             ) {
-
                 when (state) {
                     StateMusic.REPEAT.name -> playMusic(-1)
                     StateMusic.SHUFFLE.name -> {
