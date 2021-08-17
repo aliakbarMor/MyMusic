@@ -70,13 +70,12 @@ class MusicPreferencesSource @Inject constructor(private var sharedPreferences: 
         return sharedPreferences.getInt("position", 0)
     }
 
-    override fun saveLastMusicPlayed(music: Music, lastMusicIndex: Int) {
+    override fun saveLastMusicPlayed(music: Music) {
         sharedPreferences.edit().apply {
             putString("artist", music.artist).apply()
             putString("title", music.title).apply()
             putString("duration", music.duration).apply()
             putString("path", music.path).apply()
-            putInt("position", lastMusicIndex).apply()
         }
 
     }

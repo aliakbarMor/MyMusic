@@ -27,9 +27,7 @@ interface MusicRepository {
 
     fun loadLastMusicPlayed(): Music
 
-    fun loadLastIndexMusic(): Int
-
-    fun saveLastMusicPlayed(music: Music, lastMusicIndex: Int)
+    fun saveLastMusicPlayed(music: Music)
 
     fun updateListSateContainer(state: ListStateType)
 

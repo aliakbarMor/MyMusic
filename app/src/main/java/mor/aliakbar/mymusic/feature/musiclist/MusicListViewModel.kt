@@ -44,9 +44,14 @@ class MusicListViewModel @Inject constructor(private val musicRepository: MusicR
         return musicRepository.getCurrentList()
     }
 
-    fun saveLastMusicPlayed(music: Music, position: Int) {
-        musicRepository.saveLastMusicPlayed(music, position)
+    fun saveLastMusicPlayed(music: Music) {
+        musicRepository.saveLastMusicPlayed(music)
         lastMusicPlayed.value = music
+    }
+
+    fun getCurrentSongIndex(): Int? {
+        return musicList.value?.indexOfFirst {music->
+            music.path == lastMusicPlayed.value?.path }
     }
 
 

@@ -71,12 +71,8 @@ class MusicRepositoryImpl @Inject constructor(
         return musicPreferencesSource.loadLastMusicPlayed()
     }
 
-    override fun loadLastIndexMusic(): Int {
-        return musicPreferencesSource.loadLastIndexMusic()
-    }
-
-    override fun saveLastMusicPlayed(music: Music, lastMusicIndex: Int) {
-        musicPreferencesSource.saveLastMusicPlayed(music, lastMusicIndex)
+    override fun saveLastMusicPlayed(music: Music) {
+        musicPreferencesSource.saveLastMusicPlayed(music)
     }
 
     override fun updateListSateContainer(state: ListStateType) {

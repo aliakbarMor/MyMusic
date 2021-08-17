@@ -10,4 +10,7 @@ interface LoadingImageServices {
     fun loadMediumImage(imageView: ImageView, path: String?)
 
     fun loadBigImage(imageView: ImageView, path: String?)
+
+    fun loadCenterCropImage(imageView: ImageView, path: String?)
+
 }

@@ -35,6 +35,6 @@ interface MusicDataSource {
 
     fun loadLastIndexMusic(): Int
 
-    fun saveLastMusicPlayed(music: Music, lastMusicIndex: Int)
+    fun saveLastMusicPlayed(music: Music)
 
 }

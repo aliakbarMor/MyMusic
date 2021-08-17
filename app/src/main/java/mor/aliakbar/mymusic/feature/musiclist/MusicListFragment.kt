@@ -27,6 +27,7 @@ import mor.aliakbar.mymusic.data.dataclass.ListStateContainer
 import mor.aliakbar.mymusic.data.dataclass.ListStateType
 import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.databinding.FragmentMusicListBinding
+import mor.aliakbar.mymusic.databinding.NavHeaderBinding
 import mor.aliakbar.mymusic.services.loadingimage.LoadingImageServices
 import mor.aliakbar.mymusic.services.musicservice.MusicService
 import mor.aliakbar.mymusic.utility.Variable
@@ -40,6 +41,7 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
         get() = { layoutInflater, viewGroup, b ->
             FragmentMusicListBinding.inflate(layoutInflater, viewGroup, b)
         }
+    private lateinit var navBinding: NavHeaderBinding
     private val viewModel: MusicListViewModel by viewModels()
 
     private lateinit var controller: NavController
@@ -64,12 +66,18 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
         TODO("Not yet implemented")
     }
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View? {
+        navBinding = NavHeaderBinding.inflate(inflater)
+        return super.onCreateView(inflater, container, savedInstanceState)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        controller = requireActivity().findNavController(R.id.nav_host_fragment)
-
         checkPermission()
+        initialize()
         observeViews()
 
     }
@@ -82,6 +90,16 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
         musicIntentFilter.addAction(MusicService.ACTION_MUSIC_IN_PROGRESS)
         LocalBroadcastManager.getInstance(requireActivity())
             .registerReceiver(musicReceiver, musicIntentFilter)
+    }
+
+    private fun initialize() {
+        controller = requireActivity().findNavController(R.id.nav_host_fragment)
+        binding.navView.addHeaderView(navBinding.root)
+
+        binding.bottomSheet.setOnClickListener {
+            viewModel.updateListSateContainer(ListStateType.DEFAULT)
+            viewModel.getCurrentSongIndex()?.let { position -> goToFragmentPlayMusic(position) }
+        }
     }
 
     private fun observeViews() {
@@ -99,8 +117,19 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
         })
 
         viewModel.lastMusicPlayed.observe(viewLifecycleOwner) {
-            if (it.artist != null) {
-                setNavViewAndBottomShit(it)
+            if (it.path != null) {
+                val bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                binding.apply {
+                    textTitleBottomSheet.text = it.title
+                    textArtistBottomSheet.text = it.artist
+                    glideLoadingImageServices.loadMediumImage(imageArtistBottomSheet, it.path)
+                }
+                navBinding.apply {
+                    textTitleNavigation.text = it.title
+                    textArtistNavigation.text = it.artist
+                    glideLoadingImageServices.loadCenterCropImage(imageViewNavigation, it.path)
+                }
             }
         }
 
@@ -132,15 +161,6 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
     }
 
     private fun setNavViewAndBottomShit(music: Music) {
-        val bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-
-        binding.apply {
-            textTitleBottomSheet.text = music.title
-            textArtistBottomSheet.text = music.artist
-            glideLoadingImageServices.loadMediumImage(imageArtistBottomSheet, music.path)
-        }
-//        navBinding.invalidateAll()
 
     }
 
@@ -153,9 +173,9 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
             when (action) {
                 MusicService.ACTION_MUSIC_STARTED -> {
                     CoroutineScope(Dispatchers.Main).launch {
-                        val positionLastSongPlayed = bundle!!.getInt("currentPosition")
-                        val music = viewModel.getCurrentMusicList()[positionLastSongPlayed]
-                        viewModel.saveLastMusicPlayed(music, positionLastSongPlayed)
+                        val music =
+                            viewModel.getCurrentMusicList()[bundle!!.getInt("currentPosition")]
+                        viewModel.saveLastMusicPlayed(music)
                     }
                 }
                 MusicService.ACTION_MUSIC_IN_PROGRESS -> {

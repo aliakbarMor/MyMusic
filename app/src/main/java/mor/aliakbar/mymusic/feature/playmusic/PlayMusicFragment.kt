@@ -43,7 +43,8 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
                 textArtist.text = it.artist
                 totalDuration.text = Utils.milliToMinutes(it.duration!!)
                 glideLoadingImage.loadBigImage(imageMusic, it.path)
-                textWitchSong.text = "${viewModel.position}/${viewModel.musicsList.value!!.size}"
+                textWitchSong.text =
+                    "${viewModel.position + 1}/${viewModel.musicsList.value!!.size}"
             }
 
             requireActivity().startService(

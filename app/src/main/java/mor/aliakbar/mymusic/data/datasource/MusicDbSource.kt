@@ -54,7 +54,7 @@ interface MusicDbSource : MusicDataSource {
         TODO("Not yet implemented")
     }
 
-    override fun saveLastMusicPlayed(music: Music, lastMusicIndex: Int) {
+    override fun saveLastMusicPlayed(music: Music) {
         TODO("Not yet implemented")
     }
 }

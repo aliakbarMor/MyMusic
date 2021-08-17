@@ -100,7 +100,7 @@ class MusicDeviceSource @Inject constructor(@ApplicationContext private val cont
         TODO("Not yet implemented")
     }
 
-    override fun saveLastMusicPlayed(music: Music, lastMusicIndex: Int) {
+    override fun saveLastMusicPlayed(music: Music) {
         TODO("Not yet implemented")
     }
 
