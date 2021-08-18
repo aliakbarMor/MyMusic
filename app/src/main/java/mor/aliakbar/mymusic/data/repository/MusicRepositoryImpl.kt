@@ -1,5 +1,6 @@
 package mor.aliakbar.mymusic.data.repository
 
+import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mor.aliakbar.mymusic.data.dataclass.ListStateContainer
@@ -14,15 +15,20 @@ class MusicRepositoryImpl @Inject constructor(
     private val musicPreferencesSource: MusicDataSource
 ) : MusicRepository {
 
+    override var customList = MutableLiveData(getDeviceMusic() as ArrayList<Music>)
+
+    var playListNameCache: String = "mainMusicList"
+
     override suspend fun getCurrentList(playListName: String?): List<Music> {
+        if (playListName != null) playListNameCache = playListName
         return withContext(Dispatchers.IO) {
             when (ListStateContainer.state) {
                 ListStateType.DEFAULT -> getDeviceMusic()
                 ListStateType.MOST_PLAYED -> getMostPlayedMusic()
-                ListStateType.PLAY_LIST -> getMusicsFromPlaylist(playListName!!)
+                ListStateType.PLAY_LIST -> getMusicsFromPlaylist(playListNameCache)
+                ListStateType.CUSTOM -> customList.value!!
 //                TODO
                 ListStateType.FILTERED -> getDeviceMusic()
-                ListStateType.CUSTOM -> getDeviceMusic()
             }
         }
     }

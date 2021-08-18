@@ -8,17 +8,16 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.view.View
 import android.widget.PopupMenu
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mor.aliakbar.mymusic.R
+import mor.aliakbar.mymusic.data.dataclass.ListStateContainer
+import mor.aliakbar.mymusic.data.dataclass.ListStateType
 import java.io.File
 import java.io.IOException
 
 object MusicListenerUtility {
-
-    fun createPopUpMenu(activity: Activity, view: View): PopupMenu {
-        return PopupMenu(activity.applicationContext, view).apply {
-            menuInflater.inflate(R.menu.subject_menu, menu)
-        }
-    }
 
     fun shareMusic(activity: Activity, uri: String) {
         val intentShare = Intent(Intent.ACTION_SEND)
@@ -40,7 +39,7 @@ object MusicListenerUtility {
             if (file.exists()) {
                 activity.applicationContext?.deleteFile(file.name)
                 if (file.exists()) {
-                    Thread(Runnable {
+                    CoroutineScope(Dispatchers.IO).launch{
                         val cursor: Cursor? =
                             activity.contentResolver?.query(
                                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -63,10 +62,20 @@ object MusicListenerUtility {
                             activity.contentResolver?.delete(uri, null, null)
                         }
                         cursor.close()
-                    })
+                    }
                 }
             }
         }
 
+    }
+
+    fun setMusicListState(isMostPlayedList: Boolean) {
+        if (isMostPlayedList)
+            ListStateContainer.update(ListStateType.MOST_PLAYED)
+        else if (ListStateContainer.state != ListStateType.FILTERED &&
+            ListStateContainer.state != ListStateType.CUSTOM &&
+            ListStateContainer.state != ListStateType.PLAY_LIST
+        )
+            ListStateContainer.update(ListStateType.DEFAULT)
     }
 }

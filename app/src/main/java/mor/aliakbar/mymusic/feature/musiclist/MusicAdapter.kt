@@ -65,11 +65,6 @@ class MusicAdapter @Inject constructor(private val loadingImage: LoadingImageSer
         }
     }
 
-    fun updateList(newList: ArrayList<Music>) {
-        musics = newList
-    }
-
-
     inner class VerticalMusicListViewHolder(itemMusicBinding: ItemMusicVerticalBinding) :
         RecyclerView.ViewHolder(itemMusicBinding.root) {
         private val binding = itemMusicBinding

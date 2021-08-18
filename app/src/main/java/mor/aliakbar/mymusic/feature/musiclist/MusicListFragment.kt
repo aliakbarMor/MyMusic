@@ -6,11 +6,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.view.*
+import android.widget.PopupMenu
+import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.viewModels
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.NavController
@@ -33,6 +38,7 @@ import mor.aliakbar.mymusic.databinding.FragmentMusicListBinding
 import mor.aliakbar.mymusic.databinding.NavHeaderBinding
 import mor.aliakbar.mymusic.services.loadingimage.LoadingImageServices
 import mor.aliakbar.mymusic.services.musicservice.MusicService
+import mor.aliakbar.mymusic.utility.MusicListenerUtility
 import mor.aliakbar.mymusic.utility.Variable
 import java.util.*
 import javax.inject.Inject
@@ -54,20 +60,60 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
     @Inject lateinit var horizontalMusicAdapter: MusicAdapter
     @Inject lateinit var glideLoadingImageServices: LoadingImageServices
 
+    private val timer = Timer()
+
     override fun onMusicClicked(position: Int, isMostPlayedList: Boolean) {
-        if (isMostPlayedList)
-            viewModel.updateListSateContainer(ListStateType.MOST_PLAYED)
-        else if (ListStateContainer.state != ListStateType.FILTERED && ListStateContainer.state != ListStateType.CUSTOM)
-            viewModel.updateListSateContainer(ListStateType.DEFAULT)
-        goToFragmentPlayMusic(position)
+        if (!verticalMusicAdapter.selectedMode) {
+            MusicListenerUtility.setMusicListState(isMostPlayedList)
+            goToFragmentPlayMusic(position)
+        } else toggleToolbar()
     }
 
     override fun onMusicLongClicked(position: Int) {
-        TODO("Not yet implemented")
+        toggleToolbar()
     }
 
     override fun onSubjectClicked(position: Int, isMostPlayedList: Boolean, view: View) {
-        TODO("Not yet implemented")
+        val popup = PopupMenu(requireContext(), view).apply {
+            menuInflater.inflate(R.menu.subject_menu, menu)
+        }
+        addPlayListsToMenuExceptFavorite(popup.menu.findItem(R.id.addTo).subMenu)
+        popup.setOnMenuItemClickListener { item: MenuItem ->
+            when (item.itemId) {
+                R.id.play -> {
+                    MusicListenerUtility.setMusicListState(isMostPlayedList)
+                    goToFragmentPlayMusic(position)
+                }
+                R.id.playNext -> {
+                    viewModel.playingNextSong(position)
+                    verticalMusicAdapter.notifyDataSetChanged()
+                }
+                R.id.share -> {
+                    MusicListenerUtility.shareMusic(
+                        requireActivity(), viewModel.currentList.value!![position].path!!
+                    )
+                }
+                R.id.delete -> {
+                    MusicListenerUtility.deleteMusic(
+                        requireActivity(), viewModel.currentList.value!![position].path!!
+                    )
+                    Toast.makeText(
+                        activity,
+                        viewModel.currentList.value!![position].title.toString() + " is deleted",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                else -> {
+                    if (item.itemId != R.id.addTo) {
+                        viewModel.addMusicToPlayList(viewModel.currentList.value!![position].apply {
+                            playListName = item.title.toString()
+                        })
+                    }
+                }
+            }
+            false
+        }
+        popup.show()
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
@@ -108,13 +154,12 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
             else -> {
                 binding.drawerLayout.closeDrawer(GravityCompat.START)
                 val action =
-                    MusicListFragmentDirections.actionMusicListToPlayListFragment(menuItem.title.toString())
+                    MusicListFragmentDirections.actionMusicListSelf(menuItem.title.toString())
                 controller.navigate(action)
             }
         }
         return false
     }
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -144,10 +189,11 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
 
     override fun onDestroy() {
         super.onDestroy()
-        LocalBroadcastManager.getInstance(requireActivity()).unregisterReceiver(musicReceiver)
+        timer.cancel()
     }
 
     private fun initialize() {
+        setOnBackClick()
         controller = requireActivity().findNavController(R.id.nav_host_fragment)
         binding.navView.addHeaderView(navBinding.root)
         binding.navView.setNavigationItemSelectedListener(this)
@@ -159,8 +205,74 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
         }
 
         binding.bottomSheet.setOnClickListener {
-            viewModel.updateListSateContainer(ListStateType.DEFAULT)
+//            viewModel.updateListSateContainer(ListStateType.DEFAULT)
             viewModel.getCurrentSongIndex()?.let { position -> goToFragmentPlayMusic(position) }
+        }
+
+        binding.slectionToolbar.onDisableClickListener = View.OnClickListener {
+            disableSelectedMode()
+        }
+
+        binding.slectionToolbar.onActionAddToClickListener = View.OnClickListener {
+            val popup = PopupMenu(activity?.applicationContext, it)
+            popup.menu.add(0, 51, Menu.NONE, "Favorite")
+            addPlayListsToMenuExceptFavorite(popup.menu)
+            popup.setOnMenuItemClickListener { menuItem ->
+                viewModel.insertSomeMusics(viewModel.currentList.value!!
+                    .filter { music -> music.isSelected }
+                    .onEach { music -> music.playListName = menuItem.title.toString() })
+                disableSelectedMode()
+                false
+            }
+            popup.show()
+        }
+
+        binding.slectionToolbar.onActionPlayNextClickListener = View.OnClickListener {
+            viewModel.currentList.value!!
+                .filter { music -> music.isSelected }
+                .forEach { viewModel.playingNextSong(viewModel.currentList.value!!.indexOf(it)) }
+            disableSelectedMode()
+        }
+
+    }
+
+    private fun toggleToolbar() {
+        verticalMusicAdapter.selectedMode = verticalMusicAdapter.musicPositionSelected.size != 0
+        if (verticalMusicAdapter.selectedMode) {
+            binding.mainToolbar.visibility = View.GONE
+            binding.slectionToolbar.visibility = View.VISIBLE
+        } else {
+            binding.slectionToolbar.visibility = View.GONE
+            if (!viewModel.isInPlayList.value!!)
+                binding.mainToolbar.visibility = View.VISIBLE
+        }
+
+        binding.slectionToolbar.textNumberOfSelected =
+            verticalMusicAdapter.musicPositionSelected.size.toString() + " selected"
+    }
+
+    private fun disableSelectedMode() {
+        viewModel.currentList.value!!.forEach {
+            it.isSelected = false
+        }
+        verticalMusicAdapter.musicPositionSelected.clear()
+        verticalMusicAdapter.notifyDataSetChanged()
+        toggleToolbar()
+    }
+
+    private fun loadRandomImage() {
+        if (viewModel.currentList.value?.isNotEmpty() == true) {
+            val random = Random()
+            timer.schedule(object : TimerTask() {
+                override fun run() {
+                    binding.imageMusic.post {
+                        glideLoadingImageServices.loadBigImage(
+                            binding.imageMusic,
+                            viewModel.currentList.value!![random.nextInt(viewModel.currentList.value!!.size)].path
+                        )
+                    }
+                }
+            }, 0, 6000)
         }
     }
 
@@ -172,11 +284,22 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
             binding.recyclerViewHorizontal.adapter = horizontalMusicAdapter
         })
 
-        viewModel.musicList.observe(viewLifecycleOwner, {
+        viewModel.currentList.observe(viewLifecycleOwner, {
             verticalMusicAdapter.musics = it as ArrayList<Music>
             verticalMusicAdapter.musicListener = this
             binding.recyclerView.adapter = verticalMusicAdapter
         })
+
+        viewModel.isInPlayList.observe(viewLifecycleOwner) {
+            if (it) {
+                binding.recyclerViewHorizontal.visibility = View.GONE
+                binding.mainToolbar.visibility = View.GONE
+                binding.imageMusic.visibility = View.VISIBLE
+                binding.appBarLayout.setBackgroundColor(Color.WHITE)
+                binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+                loadRandomImage()
+            }
+        }
 
         viewModel.lastMusicPlayed.observe(viewLifecycleOwner) {
             if (it.path != null) {
@@ -205,9 +328,23 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
             menu.removeItem(52)
             it.forEach { playList ->
                 if (playList.playListName != "Favorite") {
-                    menu.add(0, 52, Menu.NONE, playList.playListName).setIcon(R.drawable.ic_music)
+                    menu.add(0, 52, Menu.NONE, playList.playListName)
+                        .setIcon(R.drawable.ic_music)
                 }
             }
+        }
+    }
+
+    private fun setOnBackClick() {
+        activity?.onBackPressedDispatcher?.addCallback {
+            if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+            } else if (verticalMusicAdapter.selectedMode) {
+                disableSelectedMode()
+            } else if (!controller.popBackStack()) {
+                requireActivity().finish()
+            } else if (viewModel.isInPlayList.value!!)
+                ListStateContainer.update(ListStateType.DEFAULT)
         }
     }
 
@@ -244,7 +381,7 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
                 MusicService.ACTION_MUSIC_STARTED -> {
                     CoroutineScope(Dispatchers.Main).launch {
                         val music =
-                            viewModel.getCurrentMusicList()[bundle!!.getInt("currentPosition")]
+                            viewModel.currentList.value!![bundle!!.getInt("currentPosition")]
                         viewModel.saveLastMusicPlayed(music)
                     }
                 }
