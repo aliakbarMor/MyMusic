@@ -1,6 +1,8 @@
 package mor.aliakbar.mymusic.services.musicservice
 
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
@@ -123,7 +125,6 @@ class MusicService : Service() {
                 sendBroadcast(
                     ACTION_MUSIC_COMPLETED, Bundle().apply { putInt("currentPosition", position) }
                 )
-
             }
         }
     }
@@ -195,7 +196,6 @@ class MusicService : Service() {
             }
         }
     }
-
 
     enum class StateMusic {
         NORMAL,

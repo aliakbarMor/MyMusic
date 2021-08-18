@@ -1,5 +1,8 @@
 package mor.aliakbar.mymusic.feature.playmusic
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.media.MediaPlayer
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -11,6 +14,7 @@ import kotlinx.coroutines.launch
 import mor.aliakbar.mymusic.base.BaseViewModel
 import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.repository.MusicRepository
+import mor.aliakbar.mymusic.notification.MusicNotification
 import mor.aliakbar.mymusic.services.musicservice.MusicService
 import javax.inject.Inject
 
@@ -150,6 +154,22 @@ class PlayMusicViewModel @Inject constructor(
 
     fun checkIsNewSong(): Boolean {
         return (music.value?.path != musicRepository.loadLastMusicPlayed().path)
+    }
+
+    var notificationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                MusicNotification.ACTION_MUSIC_SKIP_NEXT -> {
+                    skipNext()
+                }
+                MusicNotification.ACTION_MUSIC_SKIP_PREVIOUS -> {
+                    skipPrevious()
+                }
+                MusicNotification.ACTION_MUSIC_STOP -> {
+                    onPauseAndPlayClicked()
+                }
+            }
+        }
     }
 
 

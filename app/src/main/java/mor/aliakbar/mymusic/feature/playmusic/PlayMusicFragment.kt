@@ -1,6 +1,7 @@
 package mor.aliakbar.mymusic.feature.playmusic
 
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.base.BaseFragment
 import mor.aliakbar.mymusic.databinding.FragmentPlayMusicBinding
+import mor.aliakbar.mymusic.notification.MusicNotification
 import mor.aliakbar.mymusic.services.loadingimage.LoadingImageServices
 import mor.aliakbar.mymusic.services.musicservice.MusicService
 import mor.aliakbar.mymusic.utility.Utils
@@ -34,6 +36,15 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
         observesView()
         setListeners()
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val musicIntentFilter = IntentFilter()
+        musicIntentFilter.addAction(MusicNotification.ACTION_MUSIC_SKIP_NEXT)
+        musicIntentFilter.addAction(MusicNotification.ACTION_MUSIC_STOP)
+        musicIntentFilter.addAction(MusicNotification.ACTION_MUSIC_SKIP_PREVIOUS)
+        requireActivity().registerReceiver(viewModel.notificationReceiver, musicIntentFilter)
     }
 
     private fun observesView() {
