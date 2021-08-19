@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.PopupMenu
 import android.widget.Toast
@@ -15,6 +16,7 @@ import androidx.activity.addCallback
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.viewModels
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -23,13 +25,12 @@ import androidx.navigation.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.base.BaseFragment
-import mor.aliakbar.mymusic.data.dataclass.ListStateContainer
-import mor.aliakbar.mymusic.data.dataclass.ListStateType
 import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.dataclass.PlayList
 import mor.aliakbar.mymusic.databinding.DialogAddNewPlaylistBinding
@@ -234,6 +235,16 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
             disableSelectedMode()
         }
 
+        if (!viewModel.isInPlayList.value!!) {
+            binding.textSearch.addTextChangedListener {
+                viewModel.search(binding.textSearch.text.toString())
+            }
+
+            binding.imgSearch.setOnClickListener {
+                viewModel.search(binding.textSearch.text.toString())
+            }
+        }
+
     }
 
     private fun toggleToolbar() {
@@ -343,8 +354,9 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
                 disableSelectedMode()
             } else if (!controller.popBackStack()) {
                 requireActivity().finish()
-            } else if (viewModel.isInPlayList.value!!)
-                ListStateContainer.update(ListStateType.DEFAULT)
+            }
+//            else if (viewModel.isInPlayList.value!!)
+//                ListStateContainer.update(ListStateType.DEFAULT)
         }
     }
 
@@ -374,12 +386,13 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
     }
 
     private var musicReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        val eh = CoroutineExceptionHandler { _, e -> Log.d("exception handler:", "$e") }
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
             val bundle = intent.extras
             when (action) {
                 MusicService.ACTION_MUSIC_STARTED -> {
-                    CoroutineScope(Dispatchers.Main).launch {
+                    CoroutineScope(Dispatchers.Main + eh).launch {
                         val music =
                             viewModel.currentList.value!![bundle!!.getInt("currentPosition")]
                         viewModel.saveLastMusicPlayed(music)

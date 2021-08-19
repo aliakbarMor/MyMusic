@@ -8,6 +8,8 @@ interface MusicRepository {
 
     var customList: MutableLiveData<ArrayList<Music>>
 
+    var filteredList: MutableLiveData<List<Music>>
+
     suspend fun getCurrentList(playListName: String? = null): List<Music>
 
     fun getDeviceMusic(): List<Music>
@@ -31,7 +33,5 @@ interface MusicRepository {
     fun loadLastMusicPlayed(): Music
 
     fun saveLastMusicPlayed(music: Music)
-
-    fun updateListSateContainer(state: ListStateType)
 
 }

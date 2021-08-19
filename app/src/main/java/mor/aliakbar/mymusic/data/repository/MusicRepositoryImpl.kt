@@ -17,6 +17,8 @@ class MusicRepositoryImpl @Inject constructor(
 
     override var customList = MutableLiveData(getDeviceMusic() as ArrayList<Music>)
 
+    override var filteredList = MutableLiveData(getDeviceMusic())
+
     var playListNameCache: String = "mainMusicList"
 
     override suspend fun getCurrentList(playListName: String?): List<Music> {
@@ -27,8 +29,7 @@ class MusicRepositoryImpl @Inject constructor(
                 ListStateType.MOST_PLAYED -> getMostPlayedMusic()
                 ListStateType.PLAY_LIST -> getMusicsFromPlaylist(playListNameCache)
                 ListStateType.CUSTOM -> customList.value!!
-//                TODO
-                ListStateType.FILTERED -> getDeviceMusic()
+                ListStateType.FILTERED -> filteredList.value!!
             }
         }
     }
@@ -81,7 +82,4 @@ class MusicRepositoryImpl @Inject constructor(
         musicPreferencesSource.saveLastMusicPlayed(music)
     }
 
-    override fun updateListSateContainer(state: ListStateType) {
-        ListStateContainer.update(state)
-    }
 }

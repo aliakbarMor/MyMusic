@@ -12,6 +12,7 @@ import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.dataclass.PlayList
 import mor.aliakbar.mymusic.data.repository.MusicRepository
 import mor.aliakbar.mymusic.data.repository.PlayListRepository
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -60,9 +61,6 @@ class MusicListViewModel @Inject constructor(
         lastMusicPlayed.value = musicRepository.loadLastMusicPlayed()
     }
 
-    fun updateListSateContainer(state: ListStateType) =
-        musicRepository.updateListSateContainer(state)
-
     fun saveLastMusicPlayed(music: Music) {
         musicRepository.saveLastMusicPlayed(music)
         lastMusicPlayed.value = music
@@ -89,7 +87,7 @@ class MusicListViewModel @Inject constructor(
         viewModelScope.launch { musicRepository.insertSomeMusics(list) }
 
     fun playingNextSong(position: Int) {
-        musicRepository.updateListSateContainer(ListStateType.CUSTOM)
+        ListStateContainer.update(ListStateType.CUSTOM)
 
         val currentSongIndex = currentList.value!!.indexOf(lastMusicPlayed.value)
         musicRepository.customList.value?.add(
@@ -100,6 +98,20 @@ class MusicListViewModel @Inject constructor(
             musicRepository.customList.value?.removeAt(position + 1)
         } else
             musicRepository.customList.value?.removeAt(position)
+    }
+
+    fun search(text: String) {
+        val filteredMusic = musicRepository.getDeviceMusic().filter {
+            it.title!!.lowercase(Locale.ROOT).contains(text.lowercase(Locale.ROOT)) ||
+                    it.artist!!.lowercase(Locale.ROOT).contains(text.lowercase(Locale.getDefault()))
+        }
+        if (text != "")
+            ListStateContainer.update(ListStateType.FILTERED)
+        else if (ListStateContainer.state == ListStateType.FILTERED)
+            ListStateContainer.update(ListStateType.DEFAULT)
+
+        musicRepository.filteredList.value = filteredMusic
+         currentList.value = filteredMusic
     }
 
 
