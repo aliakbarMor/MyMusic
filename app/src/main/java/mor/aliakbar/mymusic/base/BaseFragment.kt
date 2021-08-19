@@ -33,17 +33,16 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
         _binding = null
     }
 
-    fun showDialog(dialogBinding: ViewBinding, onSaveClick: () -> Unit) {
-        AlertDialog
+    fun showDialog(dialogBinding: ViewBinding, onSaveClick: (() -> Unit)? = null) {
+        val dialog = AlertDialog
             .Builder(context, R.style.DialogTheme)
             .setView(dialogBinding.root)
             .setNegativeButton("Cancel") { dialogInterface: DialogInterface, _ ->
                 dialogInterface.cancel()
             }
-            .setPositiveButton("Save") { _, _ ->
-                onSaveClick.invoke()
-            }
-            .show()
+        if (onSaveClick != null)
+            dialog.setPositiveButton("Save") { _, _ -> onSaveClick.invoke() }
+        dialog.show()
     }
 
 }

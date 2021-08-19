@@ -8,12 +8,11 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import mor.aliakbar.mymusic.base.AppDatabase
+import mor.aliakbar.mymusic.data.api.ApiService
+import mor.aliakbar.mymusic.data.datasource.LyricRemoteSource
 import mor.aliakbar.mymusic.data.datasource.MusicDeviceSource
 import mor.aliakbar.mymusic.data.datasource.MusicPreferencesSource
-import mor.aliakbar.mymusic.data.repository.MusicRepository
-import mor.aliakbar.mymusic.data.repository.MusicRepositoryImpl
-import mor.aliakbar.mymusic.data.repository.PlayListRepository
-import mor.aliakbar.mymusic.data.repository.PlayListRepositoryImpl
+import mor.aliakbar.mymusic.data.repository.*
 import javax.inject.Singleton
 
 @Module
@@ -34,8 +33,13 @@ object RepositoryModule {
     }
 
     @Provides
-    fun providePlayLisRepository(appDatabase: AppDatabase): PlayListRepository {
+    fun providePlayListRepository(appDatabase: AppDatabase): PlayListRepository {
         return PlayListRepositoryImpl(appDatabase.playListDao)
+    }
+
+    @Provides
+    fun provideLyricRepository(apiService: ApiService): LyricRepository {
+        return LyricRepositoryImpl(LyricRemoteSource(apiService))
     }
 
 }

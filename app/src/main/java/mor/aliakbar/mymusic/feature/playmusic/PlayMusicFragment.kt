@@ -11,8 +11,15 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.base.BaseFragment
+import mor.aliakbar.mymusic.databinding.DialogLyricBinding
 import mor.aliakbar.mymusic.databinding.FragmentPlayMusicBinding
 import mor.aliakbar.mymusic.notification.MusicNotification
 import mor.aliakbar.mymusic.services.loadingimage.LoadingImageServices
@@ -161,10 +168,18 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
         })
 
         binding.btnLyrics.setOnClickListener {
-//            TODO
-//            LyricDialog.getInstance().showDialog(
-//                requireContext(), viewModel.music.value!!.artist, viewModel.music.value!!.title
-//            )
+            val dialogBinding = DialogLyricBinding.inflate(LayoutInflater.from(requireContext()))
+            CoroutineScope(Dispatchers.Main).launch {
+                viewModel.getLyric()
+                    .catch {
+                        delay(500)
+                        dialogBinding.lyricBody.text = "No embedded lyric found"
+                    }
+                    .collect {
+                        dialogBinding.lyricBody.text = it.lyrics
+                    }
+            }
+            showDialog(dialogBinding)
         }
 
         binding.backButton.setOnClickListener {

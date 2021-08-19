@@ -10,18 +10,23 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import mor.aliakbar.mymusic.base.BaseViewModel
+import mor.aliakbar.mymusic.data.dataclass.Lyric
 import mor.aliakbar.mymusic.data.dataclass.Music
+import mor.aliakbar.mymusic.data.repository.LyricRepository
 import mor.aliakbar.mymusic.data.repository.MusicRepository
 import mor.aliakbar.mymusic.notification.MusicNotification
 import mor.aliakbar.mymusic.services.musicservice.MusicService
+import mor.aliakbar.mymusic.utility.Utils.removeNameSiteFromMusic
 import javax.inject.Inject
 
 @HiltViewModel
 class PlayMusicViewModel @Inject constructor(
+    state: SavedStateHandle,
     private val musicRepository: MusicRepository,
-    state: SavedStateHandle
+    private val lyricRepository: LyricRepository,
 ) : BaseViewModel() {
 
     @Inject lateinit var mediaPlayer: MediaPlayer
@@ -154,6 +159,13 @@ class PlayMusicViewModel @Inject constructor(
 
     fun checkIsNewSong(): Boolean {
         return (music.value?.path != musicRepository.loadLastMusicPlayed().path)
+    }
+
+    fun getLyric(): Flow<Lyric> {
+        return lyricRepository.getLyric(
+            removeNameSiteFromMusic(music.value?.artist!!),
+            removeNameSiteFromMusic(music.value?.title!!)
+        )
     }
 
     var notificationReceiver: BroadcastReceiver = object : BroadcastReceiver() {

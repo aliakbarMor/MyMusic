@@ -40,4 +40,13 @@ object Utils {
         }
     }
 
+    fun removeNameSiteFromMusic(name: String): String {
+        val start = name.indexOf('[')
+
+        return if (start != -1){
+            name.substring(0, start)
+        }else name
+    }
+
+
 }

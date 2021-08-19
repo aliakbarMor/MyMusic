@@ -7,5 +7,6 @@ object Variable {
     const val MUSIC_VIEW_TYPE_VERTICAL = 0
     const val MUSIC_VIEW_TYPE_HORIZONTAL: Int = 1
 
+    const val BASE_URL = "https://api.lyrics.ovh/"
 
 }
