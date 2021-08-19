@@ -8,16 +8,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 import mor.aliakbar.mymusic.base.BaseViewModel
 import mor.aliakbar.mymusic.data.dataclass.Lyric
 import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.repository.LyricRepository
 import mor.aliakbar.mymusic.data.repository.MusicRepository
-import mor.aliakbar.mymusic.notification.MusicNotification
 import mor.aliakbar.mymusic.services.musicservice.MusicService
 import mor.aliakbar.mymusic.utility.Utils.removeNameSiteFromMusic
 import javax.inject.Inject
@@ -36,7 +33,7 @@ class PlayMusicViewModel @Inject constructor(
 
     val toastMassage = MutableLiveData<String>()
     val stateMusic = MutableLiveData<String>()
-    val isPlay = MutableLiveData<Boolean>()
+    val isPlay = MutableLiveData(true)
 
     val isShuffle = MutableLiveData(false)
     val isRepeat = MutableLiveData(false)
@@ -64,9 +61,10 @@ class PlayMusicViewModel @Inject constructor(
     }
 
     private fun setCurrentPosition() {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             while (true) {
-                currentPositionTime.postValue(mediaPlayer.currentPosition)
+                if (mediaPlayer.isPlaying)
+                    currentPositionTime.postValue(mediaPlayer.currentPosition)
                 delay(100)
             }
         }
@@ -168,17 +166,15 @@ class PlayMusicViewModel @Inject constructor(
         )
     }
 
-    var notificationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+    var musicReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                MusicNotification.ACTION_MUSIC_SKIP_NEXT -> {
-                    skipNext()
+                MusicService.ACTION_MUSIC_COMPLETED -> {
+                    position = intent.extras!!.getInt("position")
+                    music.value = intent.extras!!.getParcelable<Music>("music")!!
                 }
-                MusicNotification.ACTION_MUSIC_SKIP_PREVIOUS -> {
-                    skipPrevious()
-                }
-                MusicNotification.ACTION_MUSIC_STOP -> {
-                    onPauseAndPlayClicked()
+                MusicService.ACTION_STOP_AND_RESUME -> {
+                    isPlay.value = !isPlay.value!!
                 }
             }
         }

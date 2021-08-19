@@ -1,8 +1,6 @@
 package mor.aliakbar.mymusic.services.musicservice
 
 import android.app.Service
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
@@ -27,10 +25,11 @@ class MusicService : Service() {
         const val ACTION_MUSIC_COMPLETED = "com.example.mymusic.action.MUSIC_COMPLETED"
         const val ACTION_MUSIC_IN_PROGRESS = "com.example.mymusic.action.MUSIC_IN_PROGRESS"
 
-        const val ACTION_STOP = "action stop"
-        const val ACTION_PLAY = "action play"
-        const val ACTION_RESUME = "action resume"
-        const val ACTION_CHANGE_STATE = "action change state"
+        const val ACTION_PLAY = "com.example.mymusic.action.ACTION_PLAY"
+        const val ACTION_STOP_AND_RESUME = "com.example.mymusic.action.ACTION_STOP_AND_RESUME"
+        const val ACTION_SKIP_NEXT = "com.example.mymusic.action.ACTION_SKIP_NEXT"
+        const val ACTION_SKIP_PREVIOUS = "com.example.mymusic.action.ACTION_SKIP_PREVIOUS"
+        const val ACTION_CHANGE_STATE = "com.example.mymusic.action.ACTION_CHANGE_STATE"
     }
 
     @Inject lateinit var musicRepository: MusicRepository
@@ -40,6 +39,7 @@ class MusicService : Service() {
     private var musicsList = emptyList<Music>()
     private lateinit var music: Music
     private var position: Int = -1
+    private var cacheCurrentPosition: Int = 0
 
     var state: String = StateMusic.NORMAL.name
 
@@ -56,33 +56,39 @@ class MusicService : Service() {
         super.onStartCommand(intent, flags, startId)
         when (intent?.action) {
             ACTION_PLAY -> {
-                getMusicsList(intent)
+                cacheCurrentPosition = -1
+                getMusicsList()
                 getCurrentMusic(intent)
 
-                startForeground(5, musicNotification.createNotification(music, position))
-                playMusic(-1)
-
+                playMusic()
                 setOnCompletionListener()
             }
-            ACTION_STOP -> {
-                stopForeground(false)
-                mediaPlayer.stop()
-                updateIconPlayAndPauseNotification()
-            }
-            ACTION_RESUME -> {
-                startForeground(5, musicNotification.createNotification(music, position))
-                playMusic(intent.getIntExtra("currentPositionTime", -1))
-                updateIconPlayAndPauseNotification()
+            ACTION_STOP_AND_RESUME -> {
+                if (mediaPlayer.isPlaying) {
+                    cacheCurrentPosition = mediaPlayer.currentPosition
+                    stopForeground(false)
+                    mediaPlayer.stop()
+                } else
+                    playMusic()
+                updateIconPlayAndPause()
             }
             ACTION_CHANGE_STATE -> {
                 state = intent.getStringExtra("change state")!!
+            }
+            ACTION_SKIP_NEXT -> {
+                cacheCurrentPosition = -1
+                skipNext()
+            }
+            ACTION_SKIP_PREVIOUS -> {
+                cacheCurrentPosition = -1
+                skipPrevious()
             }
         }
 
         return START_STICKY
     }
 
-    private fun updateIconPlayAndPauseNotification() {
+    private fun updateIconPlayAndPause() {
         if (mediaPlayer.isPlaying) {
             musicNotification.remoteViews.setImageViewResource(
                 R.id.ic_play_and_pause_song,
@@ -95,6 +101,11 @@ class MusicService : Service() {
             )
         }
         musicNotification.notificationManager.notify(5, musicNotification.notification.build())
+
+        sendBroadcast(ACTION_STOP_AND_RESUME, Bundle().apply {
+            putInt("position", position)
+            putParcelable("music", music)
+        })
     }
 
     private fun setOnCompletionListener() {
@@ -103,28 +114,29 @@ class MusicService : Service() {
                 mediaPlayer.currentPosition - music.duration!!.toInt() > -1000
             ) {
                 when (state) {
-                    StateMusic.REPEAT.name -> playMusic(-1)
+                    StateMusic.REPEAT.name -> playMusic()
                     StateMusic.SHUFFLE.name -> {
                         val rand = Random()
                         position = rand.nextInt(musicsList.size - 1)
                         music = musicsList[position]
-                        playMusic(-1)
+                        playMusic()
                     }
                     else -> {
                         if (position < musicsList.size - 1) {
                             position++
                             music = musicsList[position]
-                            playMusic(-1)
+                            playMusic()
                         } else {
                             position = 0
                             music = musicsList[position]
-                            playMusic(-1)
+                            playMusic()
                         }
                     }
                 }
-                sendBroadcast(
-                    ACTION_MUSIC_COMPLETED, Bundle().apply { putInt("currentPosition", position) }
-                )
+                sendBroadcast(ACTION_MUSIC_COMPLETED, Bundle().apply {
+                    putInt("position", position)
+                    putParcelable("music", music)
+                })
             }
         }
     }
@@ -134,31 +146,31 @@ class MusicService : Service() {
         music = musicsList[position]
     }
 
-    private fun getMusicsList(intent: Intent) {
+    private fun getMusicsList() {
         runBlocking {
             musicsList = musicRepository.getCurrentList()
         }
     }
 
-    private fun playMusic(currentPositionTime: Int) {
+    private fun playMusic() {
+        startForeground(5, musicNotification.createNotification(music, position))
         try {
             mediaPlayer.reset()
             mediaPlayer.setDataSource(music.path)
             mediaPlayer.prepare()
             mediaPlayer.start()
-            if (currentPositionTime != -1)
-                mediaPlayer.seekTo(currentPositionTime)
+            if (cacheCurrentPosition != -1)
+                mediaPlayer.seekTo(cacheCurrentPosition)
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
         updateNumberOfPlayed(music)
-        sendBroadcastsStartAndProgress(position)
+        sendBroadcastsStartAndProgress()
     }
 
-    private fun sendBroadcastsStartAndProgress(position: Int) {
-        val bundle = Bundle()
-        bundle.putInt("currentPosition", position)
+    private fun sendBroadcastsStartAndProgress() {
+        val bundle = Bundle().apply { putParcelable("music", music) }
         sendBroadcast(ACTION_MUSIC_STARTED, bundle)
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -175,8 +187,9 @@ class MusicService : Service() {
     }
 
     private fun sendBroadcast(action: String, bundle: Bundle) {
-        val intent = Intent(action)
-        intent.putExtras(bundle)
+        val intent = Intent(action).apply {
+            putExtras(bundle)
+        }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 
@@ -195,6 +208,38 @@ class MusicService : Service() {
                 )
             }
         }
+    }
+
+    private fun skipPrevious() {
+        if (position > 0) {
+            position--
+            music = musicsList[position]
+        } else {
+            position = musicsList.size - 1
+            music = musicsList[position]
+        }
+        music = musicsList[position]
+        playMusic()
+        sendBroadcast(ACTION_MUSIC_COMPLETED, Bundle().apply {
+            putInt("position", position)
+            putParcelable("music", music)
+        })
+    }
+
+    private fun skipNext() {
+        if (position < musicsList.size - 1) {
+            position++
+            music = musicsList[position]
+        } else {
+            position = 0
+            music = musicsList[position]
+        }
+        music = musicsList[position]
+        playMusic()
+        sendBroadcast(ACTION_MUSIC_COMPLETED, Bundle().apply {
+            putInt("position", position)
+            putParcelable("music", music)
+        })
     }
 
     enum class StateMusic {

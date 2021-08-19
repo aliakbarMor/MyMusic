@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -21,7 +22,6 @@ import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.base.BaseFragment
 import mor.aliakbar.mymusic.databinding.DialogLyricBinding
 import mor.aliakbar.mymusic.databinding.FragmentPlayMusicBinding
-import mor.aliakbar.mymusic.notification.MusicNotification
 import mor.aliakbar.mymusic.services.loadingimage.LoadingImageServices
 import mor.aliakbar.mymusic.services.musicservice.MusicService
 import mor.aliakbar.mymusic.utility.Utils
@@ -48,10 +48,10 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
     override fun onResume() {
         super.onResume()
         val musicIntentFilter = IntentFilter()
-        musicIntentFilter.addAction(MusicNotification.ACTION_MUSIC_SKIP_NEXT)
-        musicIntentFilter.addAction(MusicNotification.ACTION_MUSIC_STOP)
-        musicIntentFilter.addAction(MusicNotification.ACTION_MUSIC_SKIP_PREVIOUS)
-        requireActivity().registerReceiver(viewModel.notificationReceiver, musicIntentFilter)
+        musicIntentFilter.addAction(MusicService.ACTION_STOP_AND_RESUME)
+        musicIntentFilter.addAction(MusicService.ACTION_MUSIC_COMPLETED)
+        LocalBroadcastManager.getInstance(requireActivity())
+            .registerReceiver(viewModel.musicReceiver, musicIntentFilter)
     }
 
     private fun observesView() {
@@ -91,18 +91,8 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
         viewModel.isPlay.observe(viewLifecycleOwner) {
             if (it) {
                 binding.btnPlay.setImageResource(R.mipmap.ic_pause)
-                requireActivity().startService(
-                    Intent(requireActivity(), MusicService::class.java).apply {
-                        action = MusicService.ACTION_RESUME
-                        putExtra("position", viewModel.position)
-                        putExtra("currentPositionTime", viewModel.currentPositionTime.value!!)
-                    })
             } else {
                 binding.btnPlay.setImageResource(R.mipmap.ic_play)
-                requireActivity().startService(
-                    Intent(requireActivity(), MusicService::class.java).apply {
-                        action = MusicService.ACTION_STOP
-                    })
             }
         }
 
@@ -131,7 +121,6 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
         }
     }
 
-
     private fun setListeners() {
         binding.btnSkipNext.setOnClickListener {
             viewModel.skipNext()
@@ -149,6 +138,10 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
             viewModel.onFavoriteClicked()
         }
         binding.btnPlay.setOnClickListener {
+            requireActivity().startService(
+                Intent(requireActivity(), MusicService::class.java).apply {
+                    action = MusicService.ACTION_STOP_AND_RESUME
+                })
             viewModel.onPauseAndPlayClicked()
         }
         binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {

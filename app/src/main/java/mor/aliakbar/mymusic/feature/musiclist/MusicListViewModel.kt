@@ -1,9 +1,16 @@
 package mor.aliakbar.mymusic.feature.musiclist
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mor.aliakbar.mymusic.base.BaseViewModel
 import mor.aliakbar.mymusic.data.dataclass.ListStateContainer
@@ -12,6 +19,7 @@ import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.dataclass.PlayList
 import mor.aliakbar.mymusic.data.repository.MusicRepository
 import mor.aliakbar.mymusic.data.repository.PlayListRepository
+import mor.aliakbar.mymusic.services.musicservice.MusicService
 import java.util.*
 import javax.inject.Inject
 
@@ -107,11 +115,33 @@ class MusicListViewModel @Inject constructor(
         }
         if (text != "")
             ListStateContainer.update(ListStateType.FILTERED)
-        else if (ListStateContainer.state == ListStateType.FILTERED)
+        else
             ListStateContainer.update(ListStateType.DEFAULT)
 
         musicRepository.filteredList.value = filteredMusic
-         currentList.value = filteredMusic
+        currentList.value = filteredMusic
+    }
+
+    var musicReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        val eh = CoroutineExceptionHandler { _, e -> Log.d("exception handler:", "$e") }
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            val bundle = intent.extras
+            when (action) {
+                MusicService.ACTION_MUSIC_STARTED -> {
+                    CoroutineScope(Dispatchers.Main + eh).launch {
+                        val music = bundle!!.getParcelable<Music>("music")!!
+                        saveLastMusicPlayed(music)
+                    }
+                }
+                MusicService.ACTION_MUSIC_IN_PROGRESS -> {
+                    updatePercentageCurrentPositionTime(
+                        bundle!!.getInt("currentPositionTime") * 100
+                                / lastMusicPlayed.value?.duration!!.toInt()
+                    )
+                }
+            }
+        }
     }
 
 

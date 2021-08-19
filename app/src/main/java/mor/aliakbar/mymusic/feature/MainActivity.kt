@@ -1,8 +1,9 @@
-package mor.aliakbar.mymusic
+package mor.aliakbar.mymusic.feature
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import dagger.hilt.android.AndroidEntryPoint
+import mor.aliakbar.mymusic.R
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {

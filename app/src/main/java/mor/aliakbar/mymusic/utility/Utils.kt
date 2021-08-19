@@ -3,6 +3,7 @@ package mor.aliakbar.mymusic.utility
 import android.content.Context
 import android.content.res.Resources
 import android.util.DisplayMetrics
+import android.util.Log
 
 object Utils {
 
@@ -21,6 +22,7 @@ object Utils {
             if (Integer.parseInt(seconds) < 10)
                 seconds = "0$seconds"
 
+            Log.d("AAAAAAAAAA", "$minutes:$seconds")
             return if (Integer.parseInt(hours) > 0)
                 "$hours:$minutes:$seconds"
             else
@@ -43,9 +45,9 @@ object Utils {
     fun removeNameSiteFromMusic(name: String): String {
         val start = name.indexOf('[')
 
-        return if (start != -1){
+        return if (start != -1) {
             name.substring(0, start)
-        }else name
+        } else name
     }
 
 

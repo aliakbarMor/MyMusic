@@ -15,9 +15,10 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.navigation.NavDeepLinkBuilder
 import dagger.hilt.android.qualifiers.ApplicationContext
-import mor.aliakbar.mymusic.MainActivity
 import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.data.dataclass.Music
+import mor.aliakbar.mymusic.feature.MainActivity
+import mor.aliakbar.mymusic.services.musicservice.MusicService
 import javax.inject.Inject
 
 class MusicNotification @Inject constructor(@ApplicationContext private val context: Context) {
@@ -25,12 +26,6 @@ class MusicNotification @Inject constructor(@ApplicationContext private val cont
     lateinit var notificationManager: NotificationManager
     lateinit var notification: NotificationCompat.Builder
     lateinit var remoteViews: RemoteViews
-
-    companion object {
-        const val ACTION_MUSIC_STOP = "com.example.mymusic.action.MUSIC_STOP"
-        const val ACTION_MUSIC_SKIP_NEXT = "com.example.mymusic.action.MUSIC_SKIP_NEXT"
-        const val ACTION_MUSIC_SKIP_PREVIOUS = "com.example.mymusic.action.MUSIC_SKIP_PREVIOUS"
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createChannelId(): String {
@@ -57,25 +52,31 @@ class MusicNotification @Inject constructor(@ApplicationContext private val cont
             .setArguments(bundle)
             .createPendingIntent()
 
-        val skipPreviousIntent = Intent(ACTION_MUSIC_SKIP_PREVIOUS)
+        val skipPreviousIntent = Intent(context, MusicService::class.java).apply {
+            action = MusicService.ACTION_SKIP_PREVIOUS
+        }
         val skipPreviousPendingIntent =
-            PendingIntent.getBroadcast(
+            PendingIntent.getService(
                 context,
                 13311,
                 skipPreviousIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
-        val pauseIntent = Intent(ACTION_MUSIC_STOP)
+        val pauseIntent = Intent(context, MusicService::class.java).apply {
+            action = MusicService.ACTION_STOP_AND_RESUME
+        }
         val pausePendingIntent =
-            PendingIntent.getBroadcast(
+            PendingIntent.getService(
                 context,
                 13311,
                 pauseIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
-        val skipNextIntent = Intent(ACTION_MUSIC_SKIP_NEXT)
+        val skipNextIntent = Intent(context, MusicService::class.java).apply {
+            action = MusicService.ACTION_SKIP_NEXT
+        }
         val skipNextPendingIntent =
-            PendingIntent.getBroadcast(
+            PendingIntent.getService(
                 context,
                 13311,
                 skipNextIntent,

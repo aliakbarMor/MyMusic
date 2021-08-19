@@ -130,7 +130,7 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
                         override fun run() {
                             requireActivity().startService(
                                 Intent(requireActivity(), MusicService::class.java).apply {
-                                    action = MusicService.ACTION_STOP
+                                    action = MusicService.ACTION_STOP_AND_RESUME
                                 })
                         }
                     }, time.toLong())
@@ -182,10 +182,9 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
         super.onResume()
         val musicIntentFilter = IntentFilter()
         musicIntentFilter.addAction(MusicService.ACTION_MUSIC_STARTED)
-        musicIntentFilter.addAction(MusicService.ACTION_MUSIC_COMPLETED)
         musicIntentFilter.addAction(MusicService.ACTION_MUSIC_IN_PROGRESS)
         LocalBroadcastManager.getInstance(requireActivity())
-            .registerReceiver(musicReceiver, musicIntentFilter)
+            .registerReceiver(viewModel.musicReceiver, musicIntentFilter)
     }
 
     override fun onDestroy() {
@@ -355,8 +354,6 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
             } else if (!controller.popBackStack()) {
                 requireActivity().finish()
             }
-//            else if (viewModel.isInPlayList.value!!)
-//                ListStateContainer.update(ListStateType.DEFAULT)
         }
     }
 
@@ -383,29 +380,6 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
     private fun goToFragmentPlayMusic(position: Int) {
         val action = MusicListFragmentDirections.actionMusicListToPlayMusic(position)
         controller.navigate(action)
-    }
-
-    private var musicReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        val eh = CoroutineExceptionHandler { _, e -> Log.d("exception handler:", "$e") }
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            val bundle = intent.extras
-            when (action) {
-                MusicService.ACTION_MUSIC_STARTED -> {
-                    CoroutineScope(Dispatchers.Main + eh).launch {
-                        val music =
-                            viewModel.currentList.value!![bundle!!.getInt("currentPosition")]
-                        viewModel.saveLastMusicPlayed(music)
-                    }
-                }
-                MusicService.ACTION_MUSIC_IN_PROGRESS -> {
-                    viewModel.updatePercentageCurrentPositionTime(
-                        bundle!!.getInt("currentPositionTime") * 100
-                                / viewModel.lastMusicPlayed.value?.duration!!.toInt()
-                    )
-                }
-            }
-        }
     }
 
 
