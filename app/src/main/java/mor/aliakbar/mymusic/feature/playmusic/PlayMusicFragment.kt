@@ -2,15 +2,18 @@ package mor.aliakbar.mymusic.feature.playmusic
 
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.core.view.drawToBitmap
 import androidx.fragment.app.viewModels
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
+import androidx.palette.graphics.Palette
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +28,7 @@ import mor.aliakbar.mymusic.databinding.FragmentPlayMusicBinding
 import mor.aliakbar.mymusic.services.loadingimage.LoadingImageServices
 import mor.aliakbar.mymusic.services.musicservice.MusicService
 import mor.aliakbar.mymusic.utility.Utils
+import mor.aliakbar.mymusic.utility.Utils.manipulateColor
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -43,12 +47,25 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
         observesView()
         setListeners()
 
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(50)
+            if (viewModel.checkIsNewSong() || !MusicService.isServiceStart)
+                startMusicService(MusicService.ACTION_PLAY, Bundle().apply {
+                    putInt("position", viewModel.position)
+                })
+            else if (!viewModel.mediaPlayer.isPlaying) {
+                binding.btnPlay.setImageResource(R.drawable.ic_play)
+                viewModel.currentPositionTime.value = viewModel.mediaPlayer.currentPosition
+            }
+        }
+
     }
 
     override fun onResume() {
         super.onResume()
         val musicIntentFilter = IntentFilter()
         musicIntentFilter.addAction(MusicService.ACTION_STOP_AND_RESUME)
+        musicIntentFilter.addAction(MusicService.ACTION_MUSIC_IN_PROGRESS)
         musicIntentFilter.addAction(MusicService.ACTION_MUSIC_COMPLETED)
         LocalBroadcastManager.getInstance(requireActivity())
             .registerReceiver(viewModel.musicReceiver, musicIntentFilter)
@@ -63,17 +80,22 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
                 glideLoadingImage.loadBigImage(imageMusic, it.path)
                 textWitchSong.text =
                     "${viewModel.position + 1}/${viewModel.musicsList.value!!.size}"
-                btnPlay.setImageResource(R.mipmap.ic_pause)
-            }
-            if (viewModel.checkIsNewSong() || !MusicService.isServiceStart)
-                requireActivity().startService(
-                    Intent(requireActivity(), MusicService::class.java).apply {
-                        action = MusicService.ACTION_PLAY
-                        putExtra("position", viewModel.position)
-                    })
-            else if (!viewModel.mediaPlayer.isPlaying)
-                binding.btnPlay.setImageResource(R.mipmap.ic_play)
+                btnPlay.setImageResource(R.drawable.ic_pause)
 
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(100)
+                    Palette.from(imageMusic.drawToBitmap()).generate { palette ->
+                        val backgroundColor =
+                            palette?.vibrantSwatch?.rgb ?: palette?.lightMutedSwatch?.rgb
+                        relativeLayout.setBackgroundColor(backgroundColor ?: 0)
+                        btnPlay.setBackgroundColor(manipulateColor(backgroundColor ?: 0, 1.3f))
+                        layoutNextUp.setBackgroundColor(
+                            manipulateColor(backgroundColor ?: Color.WHITE, 0.6f)
+                        )
+                    }
+                }
+            }
+            viewModel.checkIsFavorite()
         }
 
         viewModel.toastMassage.observe(viewLifecycleOwner) {
@@ -81,18 +103,16 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
         }
 
         viewModel.stateMusic.observe(viewLifecycleOwner) {
-            requireActivity().startService(
-                Intent(requireActivity(), MusicService::class.java).apply {
-                    action = MusicService.ACTION_CHANGE_STATE
-                    putExtra("change state", it)
-                })
+            startMusicService(MusicService.ACTION_CHANGE_STATE, Bundle().apply {
+                putString("change state", it)
+            })
         }
 
         viewModel.isPlay.observe(viewLifecycleOwner) {
             if (it) {
-                binding.btnPlay.setImageResource(R.mipmap.ic_pause)
+                binding.btnPlay.setImageResource(R.drawable.ic_pause)
             } else {
-                binding.btnPlay.setImageResource(R.mipmap.ic_play)
+                binding.btnPlay.setImageResource(R.drawable.ic_play)
             }
         }
 
@@ -123,33 +143,38 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
 
     private fun setListeners() {
         binding.btnSkipNext.setOnClickListener {
-            viewModel.skipNext()
+            startMusicService(MusicService.ACTION_SKIP_NEXT, null)
         }
+
         binding.btnSkipPrevious.setOnClickListener {
-            viewModel.skipPrevious()
+            startMusicService(MusicService.ACTION_SKIP_PREVIOUS, null)
         }
+
         binding.btnRepeat.setOnClickListener {
             viewModel.onRepeatClicked()
         }
+
         binding.btnShuffle.setOnClickListener {
             viewModel.onShuffleClicked()
         }
+
         binding.btnFavourite.setOnClickListener {
             viewModel.onFavoriteClicked()
         }
+
         binding.btnPlay.setOnClickListener {
-            requireActivity().startService(
-                Intent(requireActivity(), MusicService::class.java).apply {
-                    action = MusicService.ACTION_STOP_AND_RESUME
-                })
-            viewModel.onPauseAndPlayClicked()
+            startMusicService(MusicService.ACTION_STOP_AND_RESUME, null)
         }
+
         binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    viewModel.mediaPlayer.seekTo(
-                        seekBar.progress * viewModel.music.value!!.duration!!.toInt() / 100
-                    )
+                    startMusicService(MusicService.ACTION_SEEK_TO, Bundle().apply {
+                        putInt(
+                            "seek to",
+                            seekBar.progress * viewModel.music.value!!.duration!!.toInt() / 100
+                        )
+                    })
                 }
             }
 
@@ -178,6 +203,13 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
         binding.backButton.setOnClickListener {
             findNavController().popBackStack()
         }
+    }
 
+    fun startMusicService(action: String, bundle: Bundle?) {
+        requireActivity().startService(
+            Intent(requireActivity(), MusicService::class.java).apply {
+                this.action = action
+                bundle?.let { putExtras(it) }
+            })
     }
 }

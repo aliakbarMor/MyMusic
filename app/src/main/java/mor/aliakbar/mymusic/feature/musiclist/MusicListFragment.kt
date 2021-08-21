@@ -1,14 +1,11 @@
 package mor.aliakbar.mymusic.feature.musiclist
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.PopupMenu
 import android.widget.Toast
@@ -25,9 +22,9 @@ import androidx.navigation.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.base.BaseFragment
@@ -60,8 +57,6 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
     @Inject lateinit var verticalMusicAdapter: MusicAdapter
     @Inject lateinit var horizontalMusicAdapter: MusicAdapter
     @Inject lateinit var glideLoadingImageServices: LoadingImageServices
-
-    private val timer = Timer()
 
     override fun onMusicClicked(position: Int, isMostPlayedList: Boolean) {
         if (!verticalMusicAdapter.selectedMode) {
@@ -185,11 +180,8 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
         musicIntentFilter.addAction(MusicService.ACTION_MUSIC_IN_PROGRESS)
         LocalBroadcastManager.getInstance(requireActivity())
             .registerReceiver(viewModel.musicReceiver, musicIntentFilter)
-    }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        timer.cancel()
+        viewModel.getMostPlayedMusics()
     }
 
     private fun initialize() {
@@ -273,16 +265,18 @@ class MusicListFragment : BaseFragment<FragmentMusicListBinding>(), MusicListene
     private fun loadRandomImage() {
         if (viewModel.currentList.value?.isNotEmpty() == true) {
             val random = Random()
-            timer.schedule(object : TimerTask() {
-                override fun run() {
+            CoroutineScope(Dispatchers.IO).launch {
+                delay(50)
+                while (this@MusicListFragment.isResumed) {
                     binding.imageMusic.post {
                         glideLoadingImageServices.loadBigImage(
                             binding.imageMusic,
                             viewModel.currentList.value!![random.nextInt(viewModel.currentList.value!!.size)].path
                         )
                     }
+                    delay(6000)
                 }
-            }, 0, 6000)
+            }
         }
     }
 

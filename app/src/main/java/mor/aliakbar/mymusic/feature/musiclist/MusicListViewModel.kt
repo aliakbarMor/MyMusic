@@ -33,40 +33,41 @@ class MusicListViewModel @Inject constructor(
     var currentList = MutableLiveData<List<Music>>()
     var musicListHorizontal = MutableLiveData<List<Music>>()
 
-    var lastMusicPlayed = MutableLiveData<Music>()
+    var lastMusicPlayed = MutableLiveData<Music>(musicRepository.loadLastMusicPlayed())
     var percentageTime = MutableLiveData<Int>()
 
     var playLists = MutableLiveData<ArrayList<PlayList>>()
     var isInPlayList = MutableLiveData(false)
 
     init {
-        getMusics()
+        getCurrentListMusics()
         getPlayLists()
     }
 
-    private fun getPlayLists() {
-        viewModelScope.launch {
-            playLists.value = playListRepository.getAll() as ArrayList<PlayList>
-        }
-    }
-
-    private fun getMusics() {
+    private fun getCurrentListMusics() {
         viewModelScope.launch {
             val playlistName = state.get<String>("playlistName")!!
             if (playlistName != "mainMusicList")
                 ListStateContainer.update(ListStateType.PLAY_LIST)
-
             currentList.value = musicRepository.getCurrentList(playlistName)
             isInPlayList.value = playlistName != "mainMusicList"
+        }
+    }
 
+    fun getMostPlayedMusics() {
+        viewModelScope.launch {
             val list = musicRepository.getMostPlayedMusic()
             if (list.size < 2) {
                 musicListHorizontal.value = currentList.value
             } else
                 musicListHorizontal.value = list
         }
+    }
 
-        lastMusicPlayed.value = musicRepository.loadLastMusicPlayed()
+    private fun getPlayLists() {
+        viewModelScope.launch {
+            playLists.value = playListRepository.getAll() as ArrayList<PlayList>
+        }
     }
 
     fun saveLastMusicPlayed(music: Music) {
@@ -99,13 +100,13 @@ class MusicListViewModel @Inject constructor(
 
         val currentSongIndex = currentList.value!!.indexOf(lastMusicPlayed.value)
         musicRepository.customList.value?.add(
-            currentSongIndex + 1,
-            currentList.value!![position]
+            currentSongIndex + 1, currentList.value!![position]
         )
         if (currentSongIndex < position) {
             musicRepository.customList.value?.removeAt(position + 1)
         } else
             musicRepository.customList.value?.removeAt(position)
+        getCurrentListMusics()
     }
 
     fun search(text: String) {

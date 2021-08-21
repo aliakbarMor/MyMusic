@@ -43,6 +43,7 @@
                     android:layout_height="340dp"
                     android:background="?android:colorBackground"
                     android:fitsSystemWindows="true"
+                    android:translationY="24dp"
                     android:visibility="gone"
                     app:layout_collapseMode="parallax" />
 

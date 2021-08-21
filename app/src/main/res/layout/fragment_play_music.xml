@@ -2,6 +2,7 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/relativeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -68,7 +69,9 @@
                 android:id="@+id/seekBar"
                 android:layout_width="wrap_content"
                 android:layout_height="100dp"
-                android:layout_weight="10" />
+                android:layout_weight="10"
+                android:progressTint="?colorOnBackground"
+                android:thumbTint="?colorOnBackground" />
 
             <TextView
                 android:id="@+id/total_duration"
@@ -127,21 +130,29 @@
                 android:background="?backgroundIconColor"
                 android:src="@drawable/ic_skip_previous"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/btn_play"
+                app:layout_constraintEnd_toStartOf="@id/cardBtnPlay"
                 app:layout_constraintStart_toEndOf="@id/btnShuffle"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
-                android:id="@+id/btn_play"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:src="@mipmap/ic_pause"
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardBtnPlay"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:translationY="-4dp"
+                app:cardCornerRadius="35dp"
+                app:cardElevation="8dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/btn_skip_next"
                 app:layout_constraintStart_toEndOf="@id/btn_skip_previous"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/btn_play"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="16dp"
+                    android:src="@drawable/ic_pause" />
+            </androidx.cardview.widget.CardView>
 
             <ImageButton
                 android:id="@+id/btn_skip_next"
@@ -153,7 +164,7 @@
                 android:src="@drawable/ic_skip_next"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/btn_repeat"
-                app:layout_constraintStart_toEndOf="@id/btn_play"
+                app:layout_constraintStart_toEndOf="@id/cardBtnPlay"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
@@ -177,21 +188,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="#FAFAFA"
         android:orientation="horizontal">
 
         <TextView
             android:id="@+id/text_nextUp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="up next" />
+            android:text="up next"
+            android:textColor="#fff" />
 
         <TextView
             android:id="@+id/textWitchSong"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="8dp"
-            android:text="6/200" />
+            android:text="6/200"
+            android:textColor="#fff" />
 
     </LinearLayout>
 

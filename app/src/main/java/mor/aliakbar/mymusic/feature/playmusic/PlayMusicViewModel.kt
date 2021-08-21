@@ -8,8 +8,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mor.aliakbar.mymusic.base.BaseViewModel
 import mor.aliakbar.mymusic.data.dataclass.Lyric
 import mor.aliakbar.mymusic.data.dataclass.Music
@@ -46,52 +49,15 @@ class PlayMusicViewModel @Inject constructor(
             musicsList.value = list.await()
             music.value = list.await()[position]
 
-            checkIsFavorite()
-            setCurrentPosition()
-
         }
     }
 
-    private fun checkIsFavorite() {
+    fun checkIsFavorite() {
         viewModelScope.launch {
             val isOnFavorite =
                 musicRepository.isMusicInFavorite(music.value!!.title!!, music.value!!.artist!!)
             isFavorite.postValue(isOnFavorite != 0)
         }
-    }
-
-    private fun setCurrentPosition() {
-        CoroutineScope(Dispatchers.IO).launch {
-            while (true) {
-                if (mediaPlayer.isPlaying)
-                    currentPositionTime.postValue(mediaPlayer.currentPosition)
-                delay(100)
-            }
-        }
-    }
-
-    fun skipPrevious() {
-        if (position > 0) {
-            position--
-            music.value = musicsList.value!![position]
-        } else {
-            position = musicsList.value!!.size - 1
-            music.value = musicsList.value!![position]
-        }
-        music.value = musicsList.value!![position]
-        checkIsFavorite()
-    }
-
-    fun skipNext() {
-        if (position < musicsList.value!!.size - 1) {
-            position++
-            music.value = musicsList.value!![position]
-        } else {
-            position = 0
-            music.value = musicsList.value!![position]
-        }
-        music.value = musicsList.value!![position]
-        checkIsFavorite()
     }
 
     fun onShuffleClicked() {
@@ -125,14 +91,6 @@ class PlayMusicViewModel @Inject constructor(
             } else {
                 toastMassage.value = "Repeat on"
             }
-        }
-    }
-
-    fun onPauseAndPlayClicked() {
-        if (mediaPlayer.isPlaying) {
-            isPlay.postValue(false)
-        } else {
-            isPlay.postValue(true)
         }
     }
 
@@ -174,7 +132,10 @@ class PlayMusicViewModel @Inject constructor(
                     music.value = intent.extras!!.getParcelable<Music>("music")!!
                 }
                 MusicService.ACTION_STOP_AND_RESUME -> {
-                    isPlay.value = !isPlay.value!!
+                    isPlay.value = intent.extras!!.getBoolean("isPlay")
+                }
+                MusicService.ACTION_MUSIC_IN_PROGRESS -> {
+                    currentPositionTime.postValue(intent.extras!!.getInt("currentPositionTime"))
                 }
             }
         }

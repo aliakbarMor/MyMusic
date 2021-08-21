@@ -2,8 +2,9 @@ package mor.aliakbar.mymusic.utility
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Color
 import android.util.DisplayMetrics
-import android.util.Log
+import kotlin.math.roundToInt
 
 object Utils {
 
@@ -22,7 +23,6 @@ object Utils {
             if (Integer.parseInt(seconds) < 10)
                 seconds = "0$seconds"
 
-            Log.d("AAAAAAAAAA", "$minutes:$seconds")
             return if (Integer.parseInt(hours) > 0)
                 "$hours:$minutes:$seconds"
             else
@@ -49,6 +49,20 @@ object Utils {
             name.substring(0, start)
         } else name
     }
+
+    fun manipulateColor(color: Int, factor: Float): Int {
+        val a = Color.alpha(color)
+        val r = (Color.red(color) * factor).roundToInt()
+        val g = (Color.green(color) * factor).roundToInt()
+        val b = (Color.blue(color) * factor).roundToInt()
+        return Color.argb(
+            a,
+            r.coerceAtMost(255),
+            g.coerceAtMost(255),
+            b.coerceAtMost(255)
+        )
+    }
+
 
 
 }
