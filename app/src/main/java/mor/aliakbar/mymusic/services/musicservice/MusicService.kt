@@ -52,19 +52,16 @@ class MusicService : Service() {
         TODO("Return the communication channel to the service.")
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        isServiceStart = true
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        if (!isServiceStart) {
+            isServiceStart = true
+            cacheCurrentPosition = -1
+            getMusicsList()
+            getCurrentMusic(intent!!)
+        }
         when (intent?.action) {
             ACTION_PLAY -> {
-                cacheCurrentPosition = -1
-                getMusicsList()
-                getCurrentMusic(intent)
-
                 playMusic()
                 setOnCompletionListener()
             }

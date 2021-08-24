@@ -8,10 +8,12 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.widget.RemoteViews
+import androidx.navigation.NavDeepLinkBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.repository.MusicRepository
+import mor.aliakbar.mymusic.feature.MainActivity
 import mor.aliakbar.mymusic.services.musicservice.MusicService
 import javax.inject.Inject
 
@@ -80,6 +82,13 @@ abstract class BaseWidget : AppWidgetProvider() {
             context, 13311, skipNextIntent, PendingIntent.FLAG_UPDATE_CURRENT
         )
         views.setOnClickPendingIntent(R.id.widget_btn_next, skipNextPendingIntent)
+
+        val mainPendingIntent = NavDeepLinkBuilder(context)
+            .setComponentName(MainActivity::class.java)
+            .setGraph(R.navigation.nav_graph)
+            .setDestination(R.id.musicList)
+            .createPendingIntent()
+        views.setOnClickPendingIntent(R.id.widget_content, mainPendingIntent)
     }
 
 }

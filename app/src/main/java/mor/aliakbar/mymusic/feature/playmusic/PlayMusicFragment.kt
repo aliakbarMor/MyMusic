@@ -83,7 +83,7 @@ class PlayMusicFragment : BaseFragment<FragmentPlayMusicBinding>() {
                 btnPlay.setImageResource(R.drawable.ic_pause)
 
                 CoroutineScope(Dispatchers.Main).launch {
-                    delay(100)
+                    delay(50)
                     Palette.from(imageMusic.drawToBitmap()).generate { palette ->
                         val backgroundColor =
                             palette?.vibrantSwatch?.rgb ?: palette?.lightMutedSwatch?.rgb

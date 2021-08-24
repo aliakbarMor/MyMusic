@@ -12,16 +12,18 @@ import mor.aliakbar.mymusic.services.musicservice.MusicService
 @AndroidEntryPoint
 class MusicWidgetBig : BaseWidget() {
 
-    private lateinit var remoteViews: RemoteViews
-
     override fun onUpdate(
         context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray
     ) {
-        remoteViews = RemoteViews(context.packageName, R.layout.music_widget_big)
         if (music == null)
             music = repository.loadLastMusicPlayed()
         for (appWidgetId in appWidgetIds) {
-            updateMusicWidget(context, appWidgetManager, appWidgetId, remoteViews)
+            updateMusicWidget(
+                context,
+                appWidgetManager,
+                appWidgetId,
+                RemoteViews(context.packageName, R.layout.music_widget_big)
+            )
         }
     }
 
@@ -39,6 +41,7 @@ class MusicWidgetBig : BaseWidget() {
 
     private var musicReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            val remoteViews = RemoteViews(context.packageName, R.layout.music_widget_big)
             when (intent.action) {
                 MusicService.ACTION_MUSIC_STARTED -> {
                     music = intent.extras!!.getParcelable<Music>("music")!!
