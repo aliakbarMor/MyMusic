@@ -1,6 +1,8 @@
 package mor.aliakbar.mymusic.services.musicservice
 
 import android.app.Service
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
@@ -11,9 +13,11 @@ import kotlinx.coroutines.*
 import mor.aliakbar.mymusic.R
 import mor.aliakbar.mymusic.data.dataclass.Music
 import mor.aliakbar.mymusic.data.repository.MusicRepository
+import mor.aliakbar.mymusic.feature.widgets.MusicWidget
 import mor.aliakbar.mymusic.notification.MusicNotification
 import java.util.*
 import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class MusicService : Service() {
@@ -156,6 +160,7 @@ class MusicService : Service() {
 
         updateNumberOfPlayed(music)
         sendBroadcastsStartAndProgress()
+//        updateWidget()
     }
 
     private fun sendBroadcastsStartAndProgress() {
@@ -234,6 +239,17 @@ class MusicService : Service() {
         sendBroadcast(ACTION_MUSIC_COMPLETED, Bundle().apply {
             putInt("position", position)
             putParcelable("music", music)
+        })
+    }
+
+    private fun updateWidget() {
+        sendBroadcast(Intent(this, MusicWidget::class.java).apply {
+            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            val ids: IntArray = AppWidgetManager.getInstance(application)
+                .getAppWidgetIds(ComponentName(application, MusicWidget::class.java))
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            putExtra("music", music)
+            putExtra("isPlay", mediaPlayer.isPlaying)
         })
     }
 

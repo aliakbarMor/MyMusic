@@ -1,7 +1,6 @@
 package mor.aliakbar.mymusic.data.repository
 
 import androidx.lifecycle.MutableLiveData
-import mor.aliakbar.mymusic.data.dataclass.ListStateType
 import mor.aliakbar.mymusic.data.dataclass.Music
 
 interface MusicRepository {

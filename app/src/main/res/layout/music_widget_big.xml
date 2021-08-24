@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        tools:ignore="ContentDescription" />
+
+    <LinearLayout
+        android:id="@+id/media_actions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_vertical"
+        android:layoutDirection="ltr"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/widget_btn_prev"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_weight="1"
+            android:background="@color/transparent"
+            android:padding="22dp"
+            android:src="@drawable/ic_skip_previous"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/widget_btn_toggle_play_pause"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_weight="1"
+            android:background="@color/transparent"
+            android:padding="22dp"
+            android:src="@drawable/ic_play"
+            tools:ignore="ContentDescription" />
+
+        <ImageButton
+            android:id="@+id/widget_btn_next"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_weight="1"
+            android:background="@color/transparent"
+            android:padding="22dp"
+            android:src="@drawable/ic_skip_next"
+            tools:ignore="ContentDescription" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/media_titles"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            tools:text="Title" />
+
+        <TextView
+            android:id="@+id/widget_artist"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:singleLine="true"
+            tools:text="Text" />
+
+    </LinearLayout>
+
+</RelativeLayout>

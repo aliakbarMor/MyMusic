@@ -6,18 +6,18 @@ import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
 import mor.aliakbar.mymusic.databinding.ViewToolbarSelectionBinding
 
-class SelectionToolbar(context: Context, attrs: AttributeSet?) : ConstraintLayout(context,attrs) {
+class SelectionToolbar(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
     private var binding: ViewToolbarSelectionBinding =
         ViewToolbarSelectionBinding.inflate(LayoutInflater.from(context), this, true)
 
     var onDisableClickListener: OnClickListener? = null
-    set(value) {
-        field = value
-        binding.imageDisable.setOnClickListener(
-            onDisableClickListener
-        )
-    }
+        set(value) {
+            field = value
+            binding.imageDisable.setOnClickListener(
+                onDisableClickListener
+            )
+        }
     var onActionPlayNextClickListener: OnClickListener? = null
         set(value) {
             field = value

@@ -9,10 +9,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mor.aliakbar.mymusic.base.BaseViewModel
 import mor.aliakbar.mymusic.data.dataclass.Lyric
 import mor.aliakbar.mymusic.data.dataclass.Music
