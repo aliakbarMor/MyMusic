@@ -7,6 +7,7 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -62,6 +63,11 @@ class MusicService : Service() {
         }
         when (intent?.action) {
             ACTION_PLAY -> {
+                isServiceStart = true
+                cacheCurrentPosition = -1
+                getMusicsList()
+                getCurrentMusic(intent)
+
                 playMusic()
                 setOnCompletionListener()
             }
@@ -134,6 +140,7 @@ class MusicService : Service() {
     private fun getCurrentMusic(intent: Intent) {
         position = intent.getIntExtra("position", -1)
         music = musicsList[position]
+        Log.d("AAAAAAAAAa", "getMusic")
     }
 
     private fun getMusicsList() {
